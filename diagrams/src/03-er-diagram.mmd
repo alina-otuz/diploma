@@ -1,0 +1,96 @@
+%% Entity-relationship diagram (logical data model)
+erDiagram
+  USER ||--o{ RATING : gives
+  USER ||--o{ WATCHLIST_ITEM : saves
+  USER ||--o{ HIDDEN_ITEM : dismisses
+  USER ||--o{ EVENT : generates
+  USER ||--o{ USER_GENRE : prefers
+  MOVIE ||--o{ RATING : receives
+  MOVIE ||--o{ WATCHLIST_ITEM : "is in"
+  MOVIE ||--o{ HIDDEN_ITEM : "is hidden by"
+  MOVIE ||--o{ EVENT : "is subject of"
+  MOVIE ||--o{ MOVIE_GENRE : has
+  GENRE ||--o{ MOVIE_GENRE : classifies
+  GENRE ||--o{ USER_GENRE : "is chosen in"
+  MOVIE ||--o{ MOVIE_KEYWORD : tagged
+  KEYWORD ||--o{ MOVIE_KEYWORD : labels
+  MODEL_VERSION ||--o{ RECOMMENDATION_LOG : produced
+
+  USER {
+    uuid id PK
+    string email UK
+    string password_hash
+    string display_name
+    datetime created_at
+    datetime onboarded_at
+  }
+  MOVIE {
+    int id PK
+    int movielens_id UK
+    int tmdb_id UK
+    string title
+    int year
+    int runtime_min
+    text overview
+    string poster_path
+    float popularity
+    float bayes_avg_rating
+    int rating_count
+  }
+  GENRE {
+    int id PK
+    string name UK
+  }
+  KEYWORD {
+    int id PK
+    string name UK
+  }
+  MOVIE_GENRE {
+    int movie_id FK
+    int genre_id FK
+  }
+  MOVIE_KEYWORD {
+    int movie_id FK
+    int keyword_id FK
+  }
+  USER_GENRE {
+    uuid user_id FK
+    int genre_id FK
+  }
+  RATING {
+    uuid user_id FK
+    int movie_id FK
+    float value "1-5"
+    datetime rated_at
+    string source "app or movielens"
+  }
+  WATCHLIST_ITEM {
+    uuid user_id FK
+    int movie_id FK
+    datetime added_at
+  }
+  HIDDEN_ITEM {
+    uuid user_id FK
+    int movie_id FK
+    datetime hidden_at
+  }
+  EVENT {
+    bigint id PK
+    uuid user_id FK
+    int movie_id FK
+    string type "impression, click"
+    datetime at
+  }
+  MODEL_VERSION {
+    int id PK
+    string name
+    datetime trained_at
+    json metrics
+  }
+  RECOMMENDATION_LOG {
+    bigint id PK
+    uuid user_id FK
+    int model_version_id FK
+    json items
+    datetime at
+  }

@@ -1,0 +1,25 @@
+%% Deployment view (Docker Compose on one host)
+flowchart LR
+  subgraph Internet
+    B[User browser]
+    T[(TMDB API)]
+  end
+
+  subgraph Host[Single host / VPS - Docker Compose]
+    direction TB
+    NG[nginx / Caddy<br/>TLS termination<br/>serves static SPA]
+    API[api container<br/>FastAPI + uvicorn]
+    JOB[ml container<br/>training CLI<br/>on demand or cron]
+    PG[(postgres container<br/>volume: pgdata)]
+    RD[(redis container)]
+    VOL[[volume: models/]]
+  end
+
+  B -->|HTTPS 443| NG
+  NG -->|/api| API
+  API --> PG
+  API --> RD
+  API -->|read artifacts| VOL
+  JOB --> PG
+  JOB -->|write artifacts| VOL
+  JOB -->|ingestion| T

@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CineRec — Prototype</title>
+<style>
+  :root{
+    --black:#000000ff;
+    --blackberry-cream:#502f4cff;
+    --dusty-lavender:#70587cff;
+    --thistle:#c8b8dbff;
+    --snow:#f9f4f5ff;
+    --bg:var(--snow); --panel:var(--snow); --panel2:var(--thistle); --text:var(--black);
+    --muted:var(--dusty-lavender); --accent:var(--blackberry-cream); --accent2:var(--dusty-lavender);
+    --ok:var(--blackberry-cream); --line:var(--thistle);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  header{display:flex;align-items:center;gap:16px;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:5;flex-wrap:wrap}
+  .logo{font-weight:800;font-size:20px;letter-spacing:.3px}
+  .logo span{color:var(--accent)}
+  nav{display:flex;gap:4px;flex-wrap:wrap}
+  nav button{background:none;border:0;color:var(--muted);padding:8px 12px;border-radius:8px;cursor:pointer;font:inherit}
+  nav button[aria-current=page]{background:var(--panel2);color:var(--text)}
+  nav button:hover{color:var(--text)}
+  .spacer{flex:1}
+  input[type=search]{background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:8px 12px;border-radius:8px;min-width:200px;font:inherit}
+  main{max-width:1100px;margin:0 auto;padding:20px 16px 80px}
+  h1{font-size:26px;margin:8px 0}
+  h2{font-size:19px;margin:28px 0 4px}
+  p.sub{color:var(--muted);margin:0 0 14px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+  .chip{padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--text);cursor:pointer;font:inherit}
+  .chip[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--snow)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+  .poster{height:110px;display:flex;align-items:flex-end;padding:10px;color:var(--snow);font-weight:700;font-size:15px;line-height:1.2;text-shadow:0 1px 3px rgba(0,0,0,.5);cursor:pointer;border:0;width:100%;text-align:left}
+  .body{padding:10px 12px 12px;display:flex;flex-direction:column;gap:6px;flex:1}
+  .meta{color:var(--muted);font-size:13px}
+  .reason{font-size:13px;color:var(--accent2);min-height:36px}
+  .match{font-size:12px;color:var(--ok);font-weight:600}
+  .stars{display:flex;gap:2px}
+  .stars button{background:none;border:0;padding:0 1px;font-size:20px;cursor:pointer;color:var(--line);line-height:1}
+  .stars button.on{color:var(--accent2)}
+  .row{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto}
+  .btn{background:var(--panel2);color:var(--text);border:1px solid var(--line);padding:5px 10px;border-radius:8px;cursor:pointer;font-size:13px}
+  .btn:hover{border-color:var(--accent)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--snow);font-size:15px;padding:10px 18px}
+  .btn[disabled]{opacity:.45;cursor:not-allowed}
+  .banner{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:12px 0;color:var(--muted);font-size:14px}
+  .banner b{color:var(--text)}
+  .steps{display:flex;gap:8px;margin:10px 0 18px;color:var(--muted);font-size:14px}
+  .steps span{padding:4px 12px;border-radius:999px;background:var(--panel2)}
+  .steps span.cur{background:var(--accent);color:var(--snow)}
+  .progress{height:8px;background:var(--panel2);border-radius:8px;overflow:hidden;margin:8px 0}
+  .progress i{display:block;height:100%;background:var(--ok);transition:width .2s}
+  .empty{padding:30px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:12px}
+  dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:14px;max-width:520px;width:92%;padding:20px}
+  dialog::backdrop{background:rgba(0,0,0,.6)}
+  footer{border-top:1px solid var(--line);color:var(--muted);font-size:12px;padding:16px;text-align:center}
+  :focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+  .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;color:var(--muted)}
+  .bar{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+  .bar i{display:block;height:6px;background:var(--accent);border-radius:3px}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Cine<span>Rec</span></div>
+  <nav aria-label="Main">
+    <button data-view="home">For you</button>
+    <button data-view="browse">Browse</button>
+    <button data-view="watchlist">Watchlist</button>
+    <button data-view="profile">My taste</button>
+  </nav>
+  <div class="spacer"></div>
+  <input type="search" id="q" placeholder="Search titles…" aria-label="Search titles">
+</header>
+
+<main id="app" tabindex="-1"></main>
+
+<footer>
+  CineRec diploma prototype — 28 illustrative titles, no real user data. Production version will show: “This product uses the TMDB API but is not endorsed or certified by TMDB.”
+</footer>
+
+<dialog id="dlg"></dialog>
+
+<script>
+"use strict";
+/* ---------- Mock catalogue (illustrative metadata, hand-entered) ---------- */
+const MOVIES = [
+ [1,"Inception",2010,["Sci-Fi","Action","Thriller"],["dreams","heist","mind-bending"]],
+ [2,"The Matrix",1999,["Sci-Fi","Action"],["simulation","hacker","mind-bending"]],
+ [3,"Interstellar",2014,["Sci-Fi","Drama","Adventure"],["space","time","family"]],
+ [4,"The Godfather",1972,["Crime","Drama"],["mafia","family","power"]],
+ [5,"Pulp Fiction",1994,["Crime","Thriller"],["nonlinear","gangster","dark-humor"]],
+ [6,"The Dark Knight",2008,["Action","Crime","Drama"],["superhero","vigilante","chaos"]],
+ [7,"Toy Story",1995,["Animation","Family","Comedy"],["toys","friendship"]],
+ [8,"Spirited Away",2001,["Animation","Fantasy","Adventure"],["spirits","coming-of-age"]],
+ [9,"Parasite",2019,["Thriller","Drama","Comedy"],["class","dark-humor","family"]],
+ [10,"Amélie",2001,["Romance","Comedy"],["whimsical","paris"]],
+ [11,"Whiplash",2014,["Drama","Music"],["ambition","mentor","intense"]],
+ [12,"La La Land",2016,["Romance","Music","Drama"],["dreams","jazz","los-angeles"]],
+ [13,"Blade Runner 2049",2017,["Sci-Fi","Drama","Thriller"],["dystopia","androids","neo-noir"]],
+ [14,"Mad Max: Fury Road",2015,["Action","Adventure","Sci-Fi"],["post-apocalyptic","chase"]],
+ [15,"The Shawshank Redemption",1994,["Drama","Crime"],["prison","hope","friendship"]],
+ [16,"Forrest Gump",1994,["Drama","Romance","Comedy"],["history","friendship"]],
+ [17,"Get Out",2017,["Horror","Thriller"],["social-thriller","dark-humor","race"]],
+ [18,"The Shining",1980,["Horror"],["haunted","isolation","psychological"]],
+ [19,"Coco",2017,["Animation","Family","Music","Fantasy"],["family","afterlife","music"]],
+ [20,"Your Name",2016,["Animation","Romance","Fantasy","Drama"],["time","coming-of-age"]],
+ [21,"Knives Out",2019,["Mystery","Comedy","Crime"],["whodunit","family","dark-humor"]],
+ [22,"Gone Girl",2014,["Mystery","Thriller","Drama"],["marriage","twist","psychological"]],
+ [23,"The Grand Budapest Hotel",2014,["Comedy","Adventure","Crime"],["whimsical","heist"]],
+ [24,"Arrival",2016,["Sci-Fi","Drama","Mystery"],["aliens","language","time"]],
+ [25,"Spider-Man: Into the Spider-Verse",2018,["Animation","Action","Adventure"],["superhero","coming-of-age"]],
+ [26,"Se7en",1995,["Crime","Mystery","Thriller"],["serial-killer","neo-noir","dark"]],
+ [27,"Up",2009,["Animation","Adventure","Family"],["friendship","loss"]],
+ [28,"Jurassic Park",1993,["Sci-Fi","Adventure"],["dinosaurs","science-gone-wrong"]],
+].map(([id,title,year,genres,tags])=>({id,title,year,genres,tags}));
+const BY_ID = Object.fromEntries(MOVIES.map(m=>[m.id,m]));
+const GENRES = [...new Set(MOVIES.flatMap(m=>m.genres))].sort();
+// Illustrative non-personalised "popularity" prior (stand-in for Bayesian weighted rating)
+const POP = {1:.95,2:.9,3:.9,4:.95,5:.9,6:.95,7:.85,8:.8,9:.85,10:.6,11:.7,12:.65,13:.6,14:.7,15:1,16:.9,17:.6,18:.6,19:.65,20:.6,21:.6,22:.65,23:.55,24:.6,25:.65,26:.75,27:.7,28:.8};
+
+/* ---------- State (localStorage with graceful fallback) ---------- */
+const KEY="cinerec-proto-v1";
+const LEGACY_KEY="cinematch-proto-v1";
+let state={genres:[],ratings:{},watch:[],hidden:[],onboarded:false};
+try{const s=localStorage.getItem(KEY)||localStorage.getItem(LEGACY_KEY); if(s) state={...state,...JSON.parse(s)};}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+
+/* ---------- Recommender (content-based + popularity prior, cold-start switching) ---------- */
+// Feature vector: genres weight 1, tags weight 0.6
+function vec(m){const v={};m.genres.forEach(g=>v["g:"+g]=1);m.tags.forEach(t=>v["t:"+t]=.6);return v;}
+const VEC = Object.fromEntries(MOVIES.map(m=>[m.id,vec(m)]));
+function dot(a,b){let s=0;for(const k in a) if(b[k]) s+=a[k]*b[k];return s;}
+function norm(a){return Math.sqrt(dot(a,a))||1;}
+function cos(a,b){return dot(a,b)/(norm(a)*norm(b));}
+function add(t,v,w){for(const k in v) t[k]=(t[k]||0)+v[k]*w;}
+
+function weights(n){ // doc 06 §6.5 / diagram 5 (toy values)
+  if(n<5) return {pop:.5,cb:.5,label:"cold start"};
+  if(n<20) return {pop:.2,cb:.8,label:"warming up"};
+  return {pop:.1,cb:.9,label:"warm"};
+}
+function profile(){
+  const rated=Object.entries(state.ratings).map(([id,r])=>[+id,r]);
+  const mean=rated.length?rated.reduce((s,[,r])=>s+r,0)/rated.length:3;
+  const p={};
+  rated.forEach(([id,r])=>add(p,VEC[id],r-mean+ (rated.length<2?0:0)));
+  // if all ratings equal (mean subtraction => 0) fall back to raw positive signal
+  if(!Object.keys(p).length || Object.values(p).every(x=>x===0)) rated.forEach(([id,r])=>add(p,VEC[id],r-2.5));
+  state.genres.forEach(g=>{p["g:"+g]=(p["g:"+g]||0)+1.5;}); // onboarding genres as prior
+  return {p,n:rated.length};
+}
+function recommend(n=12){
+  const {p,n:cnt}=profile(), w=weights(cnt);
+  const seen=new Set([...Object.keys(state.ratings).map(Number),...state.hidden]);
+  const liked=Object.entries(state.ratings).filter(([,r])=>r>=4).map(([id])=>+id);
+  let cands=MOVIES.filter(m=>!seen.has(m.id)).map(m=>{
+    const cb=Object.keys(p).length?Math.max(0,cos(p,VEC[m.id])):0;
+    let why=null,best=0;
+    liked.forEach(id=>{const s=cos(VEC[id],VEC[m.id]); if(s>best){best=s;why=id;}});
+    const shared=m.genres.filter(g=>state.genres.includes(g));
+    let reason;
+    if(why && best>.25) reason=`Because you rated “${BY_ID[why].title}” ${state.ratings[why]}★`;
+    else if(shared.length) reason=`Matches your interest in ${shared.join(" & ")}`;
+    else reason="Popular with viewers overall";
+    return {m,cb,pop:POP[m.id]||.5,reason};
+  });
+  const maxCb=Math.max(...cands.map(c=>c.cb),1e-9);
+  cands.forEach(c=>{c.score=w.pop*c.pop+w.cb*(c.cb/maxCb);});
+  cands.sort((a,b)=>b.score-a.score);
+  // MMR diversity re-rank (lambda .8) on genre vectors
+  const out=[];const pool=cands.slice();
+  while(out.length<n&&pool.length){
+    let bi=0,bv=-1e9;
+    pool.forEach((c,i)=>{
+      const sim=out.length?Math.max(...out.map(o=>cos(VEC[o.m.id],VEC[c.m.id]))):0;
+      const v=.8*c.score-.2*sim; if(v>bv){bv=v;bi=i;}
+    });
+    out.push(pool.splice(bi,1)[0]);
+  }
+  return {items:out,w,cnt};
+}
+
+/* ---------- UI helpers ---------- */
+const $=(s,r=document)=>r.querySelector(s);
+const app=$("#app");
+let view="home", query="";
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function poster(m){const colors=["var(--dusty-lavender)","var(--blackberry-cream)"];return `style="background:linear-gradient(135deg,${colors[m.id%colors.length]},var(--blackberry-cream))"`;}
+function starsHtml(id){
+  const r=state.ratings[id]||0;
+  return `<div class="stars" role="radiogroup" aria-label="Rate ${esc(BY_ID[id].title)}">`+
+    [1,2,3,4,5].map(i=>`<button class="${i<=r?"on":""}" data-rate="${id}:${i}" role="radio" aria-checked="${i===r}" aria-label="${i} star${i>1?"s":""}">★</button>`).join("")+`</div>`;
+}
+function cardHtml(m,{reason,score,hideBtn}={}){
+  const inW=state.watch.includes(m.id);
+  return `<article class="card">
+    <button class="poster" ${poster(m)} data-open="${m.id}" aria-label="Details for ${esc(m.title)}">${esc(m.title)}</button>
+    <div class="body">
+      <div class="meta">${m.year} · ${esc(m.genres.slice(0,2).join(", "))}</div>
+      ${score!=null?`<div class="match">${Math.round(score*100)}% match</div>`:""}
+      ${reason!=null?`<div class="reason">💡 ${esc(reason)}</div>`:""}
+      ${starsHtml(m.id)}
+      <div class="row">
+        <button class="btn" data-watch="${m.id}">${inW?"✓ In watchlist":"＋ Watchlist"}</button>
+        ${hideBtn?`<button class="btn" data-hide="${m.id}">Not interested</button>`:""}
+      </div>
+    </div></article>`;
+}
+
+/* ---------- Views ---------- */
+let obStep=1;
+function renderOnboarding(){
+  const nRated=Object.keys(state.ratings).length;
+  if(obStep===1){
+    app.innerHTML=`<h1>Welcome to CineRec 👋</h1>
+    <div class="steps"><span class="cur">1 · Genres</span><span>2 · Rate films</span><span>3 · Your picks</span></div>
+    <p class="sub">Pick at least 3 genres you enjoy. This is your starting point (cold start) until we learn from your ratings.</p>
+    <div class="chips" id="gchips">${GENRES.map(g=>`<button class="chip" aria-pressed="${state.genres.includes(g)}" data-genre="${g}">${g}</button>`).join("")}</div>
+    <button class="btn primary" id="next1" ${state.genres.length<3?"disabled":""}>Continue (${state.genres.length}/3)</button>`;
+  } else {
+    const suggestions=MOVIES.slice().sort((a,b)=>{
+      const sa=a.genres.filter(g=>state.genres.includes(g)).length+POP[a.id];
+      const sb=b.genres.filter(g=>state.genres.includes(g)).length+POP[b.id];return sb-sa;}).slice(0,10);
+    app.innerHTML=`<h1>Rate a few films you've seen</h1>
+    <div class="steps"><span>1 · Genres</span><span class="cur">2 · Rate films</span><span>3 · Your picks</span></div>
+    <p class="sub">Rate at least 5 (skip any you haven't seen).</p>
+    <div class="progress" aria-label="Progress"><i style="width:${Math.min(100,nRated/5*100)}%"></i></div>
+    <div class="grid">${suggestions.map(m=>`<article class="card"><button class="poster" ${poster(m)} data-open="${m.id}">${esc(m.title)}</button><div class="body"><div class="meta">${m.year}</div>${starsHtml(m.id)}</div></article>`).join("")}</div>
+    <p></p><button class="btn primary" id="finish">${nRated>=5?"See my recommendations":"Skip for now"}</button> <span class="meta">${nRated}/5 rated</span>`;
+  }
+}
+function renderHome(){
+  if(!state.onboarded){renderOnboarding();return;}
+  const {items,w,cnt}=recommend(12);
+  const liked=Object.entries(state.ratings).filter(([,r])=>r>=4).sort((a,b)=>b[1]-a[1]).slice(0,1);
+  let because="";
+  if(liked.length){
+    const id=+liked[0][0];
+    const sims=MOVIES.filter(m=>m.id!==id&&!(m.id in state.ratings)&&!state.hidden.includes(m.id))
+      .map(m=>[m,cos(VEC[id],VEC[m.id])]).sort((a,b)=>b[1]-a[1]).slice(0,4);
+    because=`<h2>Because you liked “${esc(BY_ID[id].title)}”</h2><p class="sub">Item-to-item similarity</p><div class="grid">${sims.map(([m,s])=>cardHtml(m,{score:s})).join("")}</div>`;
+  }
+  app.innerHTML=`<h1>Recommended for you</h1>
+  <div class="banner"><b>Mode: ${w.label}</b> · ${cnt} rating${cnt===1?"":"s"} · blend = ${Math.round(w.pop*100)}% popularity + ${Math.round(w.cb*100)}% content-based, then diversity re-ranking (MMR). Rate more films to see the list change.</div>
+  ${items.length?`<div class="grid">${items.map(c=>cardHtml(c.m,{reason:c.reason,score:c.score,hideBtn:true})).join("")}</div>`:`<div class="empty">No more recommendations — you've rated or hidden everything in this tiny catalogue.</div>`}
+  ${because}`;
+}
+function renderBrowse(){
+  const q=query.trim().toLowerCase();
+  const list=MOVIES.filter(m=>!q||m.title.toLowerCase().includes(q)||m.genres.some(g=>g.toLowerCase().includes(q)));
+  app.innerHTML=`<h1>${q?`Results for “${esc(query)}”`:"Browse"}</h1>${list.length?`<div class="grid">${list.map(m=>cardHtml(m)).join("")}</div>`:`<div class="empty">No movies match “${esc(query)}”.</div>`}`;
+}
+function renderWatchlist(){
+  const list=state.watch.map(id=>BY_ID[id]);
+  app.innerHTML=`<h1>Watchlist</h1>${list.length?`<div class="grid">${list.map(m=>cardHtml(m)).join("")}</div>`:`<div class="empty">Your watchlist is empty. Add films with “＋ Watchlist”.</div>`}`;
+}
+function renderProfile(){
+  const {p,n}=profile();
+  const g=Object.entries(p).filter(([k,v])=>k.startsWith("g:")&&v>0).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const max=g.length?g[0][1]:1;
+  app.innerHTML=`<h1>My taste profile</h1><p class="sub">Transparent view of what the content-based model learned from your ${n} rating(s) and chosen genres.</p>
+  ${g.length?g.map(([k,v])=>`<div class="bar"><span style="width:90px">${esc(k.slice(2))}</span><i style="width:${v/max*220}px"></i><span>${v.toFixed(1)}</span></div>`).join(""):`<div class="empty">Nothing learned yet.</div>`}
+  <h2>Data controls (FR-04, FR-05)</h2>
+  <div class="row"><button class="btn" id="export">Export my data (JSON)</button><button class="btn" id="redo">Redo onboarding</button><button class="btn" id="wipe">Delete all my data</button></div>
+  <p class="meta">Hidden titles: ${state.hidden.length?state.hidden.map(id=>esc(BY_ID[id].title)).join(", "):"none"} ${state.hidden.length?'<button class="btn" id="unhide">Unhide all</button>':''}</p>
+  <h2>How this prototype works</h2>
+  <p class="mono">profile = Σ (rating − mean) · features(movie) + genre prior<br>score = w_pop · popularity + w_cb · cosine(profile, movie)<br>weights switch with #ratings: &lt;5 cold · 5–19 warming · ≥20 warm<br>list = MMR re-rank (λ=0.8) · reason = most similar liked film or matching genres</p>`;
+}
+function render(){
+  document.querySelectorAll("nav button").forEach(b=>b.setAttribute("aria-current",b.dataset.view===view?"page":"false"));
+  ({home:renderHome,browse:renderBrowse,watchlist:renderWatchlist,profile:renderProfile})[view]();
+}
+
+/* ---------- Events (delegated) ---------- */
+document.addEventListener("click",e=>{
+  const t=e.target.closest("button"); if(!t) return;
+  if(t.dataset.view){view=t.dataset.view;query=$("#q").value="";render();return;}
+  if(t.dataset.rate){const [id,v]=t.dataset.rate.split(":").map(Number);
+    if(state.ratings[id]===v) delete state.ratings[id]; else state.ratings[id]=v; save();
+    if(!state.onboarded) renderOnboarding(); else render(); if($("#dlg").open) openDetails(id); return;}
+  if(t.dataset.watch){const id=+t.dataset.watch;const i=state.watch.indexOf(id); i<0?state.watch.push(id):state.watch.splice(i,1);save();render();if($("#dlg").open)openDetails(id);return;}
+  if(t.dataset.hide){state.hidden.push(+t.dataset.hide);save();render();return;}
+  if(t.dataset.open){openDetails(+t.dataset.open);return;}
+  if(t.dataset.genre){const g=t.dataset.genre;const i=state.genres.indexOf(g);i<0?state.genres.push(g):state.genres.splice(i,1);save();renderOnboarding();return;}
+  if(t.id==="next1"){obStep=2;renderOnboarding();return;}
+  if(t.id==="finish"){state.onboarded=true;obStep=1;save();render();return;}
+  if(t.id==="export"){const blob=new Blob([JSON.stringify({...state,exported_at:new Date().toISOString()},null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="cinerec-export.json";a.click();return;}
+  if(t.id==="redo"){state.onboarded=false;obStep=1;save();view="home";render();return;}
+  if(t.id==="wipe"){if(confirm("Delete all prototype data stored in this browser?")){state={genres:[],ratings:{},watch:[],hidden:[],onboarded:false};obStep=1;save();view="home";render();}return;}
+  if(t.id==="unhide"){state.hidden=[];save();render();return;}
+  if(t.id==="close"){$("#dlg").close();return;}
+});
+$("#q").addEventListener("input",e=>{query=e.target.value;view="browse";render();});
+
+function openDetails(id){
+  const m=BY_ID[id];
+  const sims=MOVIES.filter(x=>x.id!==id).map(x=>[x,cos(VEC[id],VEC[x.id])]).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const d=$("#dlg");
+  d.innerHTML=`<h1 style="margin-top:0">${esc(m.title)} <span class="meta">(${m.year})</span></h1>
+  <p class="meta">${esc(m.genres.join(" · "))}<br>Keywords: ${esc(m.tags.join(", "))}</p>
+  ${starsHtml(id)}
+  <div class="row" style="margin:10px 0"><button class="btn" data-watch="${id}">${state.watch.includes(id)?"✓ In watchlist":"＋ Watchlist"}</button></div>
+  <h2 style="font-size:16px">Similar movies</h2>
+  <ol>${sims.map(([x,s])=>`<li><button class="btn" data-open="${x.id}">${esc(x.title)}</button> <span class="meta">${Math.round(s*100)}% similar</span></li>`).join("")}</ol>
+  <button class="btn" id="close">Close</button>`;
+  if(!d.open) d.showModal();
+}
+render();
+</script>
+</body>
+</html>

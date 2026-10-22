@@ -1,0 +1,41 @@
+%% Use-case diagram (Mermaid flowchart notation). Edit at https://mermaid.live or in any Mermaid-aware editor.
+flowchart LR
+  V([Visitor])
+  U([User])
+  A([Admin])
+  T([TMDB API])
+
+  subgraph CineMatch[CineMatch platform]
+    direction TB
+    UC1((Register / Log in))
+    UC2((Browse & search movies))
+    UC3((View movie details<br/>+ similar movies))
+    UC4((Rate movie))
+    UC5((Manage watchlist))
+    UC6((Complete onboarding<br/>genres + first ratings))
+    UC7((Get personalized<br/>recommendations))
+    UC8((See explanation))
+    UC9((Mark Not interested))
+    UC10((Export / delete data))
+    UC11((Run ingestion))
+    UC12((Retrain & reload model))
+    UC13((Run offline evaluation))
+  end
+
+  V --> UC1
+  V --> UC2
+  V --> UC3
+  U --> UC2
+  U --> UC3
+  U --> UC4
+  U --> UC5
+  U --> UC6
+  U --> UC7
+  U --> UC9
+  U --> UC10
+  UC7 -. include .-> UC8
+  UC6 -. include .-> UC4
+  A --> UC11
+  A --> UC12
+  A --> UC13
+  UC11 --> T

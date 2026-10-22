@@ -1,0 +1,29 @@
+%% Offline training/evaluation pipeline and online hybrid scoring
+flowchart TB
+  subgraph OFF[Offline - python -m ml.cli ...]
+    direction TB
+    A1[Load ratings + metadata<br/>from PostgreSQL] --> A2[Split per user<br/>train / validation / test<br/>fixed seed]
+    A2 --> A3[Build features<br/>TF-IDF genres+keywords+overview<br/>sparse user-item matrix]
+    A3 --> B1[Popularity<br/>Bayesian weighted rating]
+    A3 --> B2[Content-based<br/>cosine over TF-IDF]
+    A3 --> B3[Item-kNN<br/>top-K neighbours]
+    A3 --> B4[ALS / BPR<br/>latent factors]
+    B1 & B2 & B3 & B4 --> C1[Tune hybrid weights<br/>on validation set]
+    C1 --> C2[Evaluate on test set<br/>NDCG, Recall, coverage,<br/>novelty, diversity + bootstrap CI]
+    C1 --> C3[Export artifacts<br/>+ model_version row]
+  end
+
+  subgraph ON[Online - per request]
+    direction TB
+    D1[User interactions] --> D2{How many<br/>ratings?}
+    D2 -->|0 to 4 cold| D3[w: popularity 0.5 / content 0.5 / CF 0]
+    D2 -->|5 to 19 warming| D4[w: popularity 0.2 / content 0.4 / CF 0.4]
+    D2 -->|20+ warm| D5[w: popularity 0.1 / content 0.2 / CF 0.7]
+    D3 & D4 & D5 --> D6[Blend normalised scores]
+    D6 --> D7[Remove seen, hidden, watchlisted]
+    D7 --> D8[Diversity re-rank MMR]
+    D8 --> D9[Attach reasons<br/>top contributing liked item or genres]
+    D9 --> D10[Return top N]
+  end
+
+  C3 -.-> D6

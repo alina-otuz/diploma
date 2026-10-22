@@ -1,0 +1,35 @@
+%% Sequence: user opens home page and receives personalized recommendations
+sequenceDiagram
+  autonumber
+  actor U as User
+  participant S as React SPA
+  participant A as FastAPI (auth + recommendations)
+  participant R as Redis
+  participant M as Model store (in memory)
+  participant D as PostgreSQL
+
+  U->>S: Open home page
+  S->>A: GET /api/v1/recommendations?n=20 (Bearer JWT)
+  A->>A: Validate token, load user id
+  A->>R: GET recs:{user_id}:{model_version}
+  alt cache hit
+    R-->>A: cached list
+  else cache miss
+    A->>D: Load user ratings, hidden, watchlist
+    D-->>A: interactions
+    A->>M: Candidate scores (content, item-kNN, ALS, popularity)
+    M-->>A: scores per candidate
+    A->>A: Pick weights by #ratings (cold to warm)
+    A->>A: Blend, filter seen/hidden, diversify (MMR)
+    A->>A: Build reason per item
+    A->>R: SET recs:{user_id}:{model_version} TTL 5 min
+  end
+  A-->>S: 200 JSON [{movie, score, reason}]
+  S-->>U: Render rows with explanations
+
+  U->>S: Click "Not interested" on a card
+  S->>A: POST /api/v1/feedback/hidden {movie_id}
+  A->>D: INSERT hidden_item
+  A->>R: DEL recs:{user_id}:*
+  A-->>S: 204
+  S-->>U: Remove card immediately

@@ -1,0 +1,44 @@
+%% Container / component view (C4 level 2 style)
+flowchart TB
+  subgraph Client[Browser]
+    SPA[React SPA<br/>TypeScript + Vite<br/>TanStack Query]
+  end
+
+  subgraph Server[Application server - Docker Compose]
+    direction TB
+    subgraph API[FastAPI modular monolith]
+      AUTH[auth<br/>JWT, argon2id]
+      CAT[catalog<br/>list, search, details]
+      INT[interactions<br/>ratings, watchlist, hidden]
+      REC[recommendations<br/>hybrid scorer, explainer,<br/>diversity re-ranker]
+      ADM[admin<br/>health, reload]
+    end
+    PG[(PostgreSQL<br/>users, movies, ratings,<br/>watchlist, feedback)]
+    RD[(Redis<br/>rec cache, popular rows)]
+    MS[[Model store<br/>item-sim, ALS factors,<br/>TF-IDF matrix, metadata]]
+  end
+
+  subgraph Offline[Offline pipeline - Python CLI]
+    ING[ingest<br/>MovieLens + TMDB]
+    TRN[train<br/>popularity, content,<br/>item-kNN, ALS/BPR]
+    EVL[evaluate<br/>metrics + bootstrap CI]
+  end
+
+  EXT[(TMDB API)]
+  ML[(MovieLens files)]
+
+  SPA -->|REST/JSON over HTTPS| API
+  AUTH --> PG
+  CAT --> PG
+  INT --> PG
+  REC --> RD
+  REC --> MS
+  REC --> PG
+  ADM --> MS
+
+  ING --> ML
+  ING --> EXT
+  ING --> PG
+  TRN --> PG
+  TRN --> MS
+  EVL --> PG
