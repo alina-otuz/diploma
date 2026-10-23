@@ -50,6 +50,7 @@ flowchart LR
 | `catalog` | Movie list, search (pg_trgm), filters, details | `GET /movies`, `/movies/{id}`, `/search` |
 | `interactions` | Ratings, watchlist, hidden items, export | `PUT /ratings/{movie_id}`, `POST /watchlist`, `POST /feedback/hidden`, `GET /me/export` |
 | `recommendations` | Candidate scoring, hybrid blending, filtering, diversification, reasons | `GET /recommendations`, `GET /movies/{id}/similar` |
+| `discovery` | Mood and micro-topic filters, randomizer, person (cast/director) pages, trailer lookup, external-rating proxy with cache | `GET /movies?mood=&tag=&person=&hide_watched=`, `POST /discover/random`, `GET /movies/{id}/trailer`, `GET /movies/{id}/ratings` |
 | `admin` | Health, model version, reload | `GET /health`, `POST /admin/reload` |
 | Offline CLI (`ml`) | ingest, train, evaluate | `python -m ml.cli {ingest,train,evaluate}` |
 
@@ -65,6 +66,12 @@ flowchart LR
 | `PUT /api/v1/ratings/{movie_id}` body `{value}` / `DELETE` | user | Rate / unrate |
 | `POST/DELETE /api/v1/watchlist/{movie_id}` | user | Watchlist |
 | `POST /api/v1/feedback/hidden` | user | Not interested |
+| `PUT/DELETE /api/v1/watched/{movie_id}` | user | Mark / unmark as watched (FR-67) |
+| `GET /api/v1/moods`, `GET /api/v1/tags` | optional | Mood and micro-topic lists (FR-60, FR-61) |
+| `POST /api/v1/discover/random` body `{include_genres, exclude_genres, moods, year_from, year_to, min_rating, max_runtime, adventurousness}` | user | Randomizer with boundaries (FR-62) |
+| `GET /api/v1/movies/{id}/trailer` | optional | YouTube key for click-to-load player (FR-63) |
+| `GET /api/v1/movies/{id}/ratings` | optional | External ratings, cached (FR-64) |
+| `GET /api/v1/people/{id}/movies` | optional | Cast/director page (FR-65) |
 | `GET /api/v1/recommendations?n=20` | user | Personalized list `[{movie, score, reason}]` |
 | `GET /api/v1/me/export`, `DELETE /api/v1/me` | user | Data portability / deletion |
 | `GET /api/v1/health`, `POST /api/v1/admin/reload` | admin | Operations |
@@ -83,6 +90,11 @@ cf(u,i)  = α · itemKNN(u,i) + (1−α) · ALS(u,i)
 
 Weights depend on the number of ratings *n_u* (cold < 5, warming 5–19, warm ≥ 20 — initial values from diagram 5, to be tuned on the validation split). The final list is re-ranked with Maximal Marginal Relevance (λ ≈ 0.8) for diversity. The reason text names the liked movie with the highest contribution ("Because you rated *X* 5★") or the shared genres ("Matches your interest in Sci-Fi and Thriller").
 
+## 6.5b Mood scoring and the randomizer
+
+* **Mood score** `m(i, k) = Σ_t w(k,t) · genome(i,t)` over the curated tags *t* of mood *k* (normalised to 0–1); a movie has mood *k* if `m(i,k) ≥ θ_k` (θ tuned on the annotated validation sample, NFR-14). Fallback to keyword/genre heuristics where genome data is missing. Mood scores are precomputed at ingestion.
+* **Randomizer:** build the candidate set *C* = unseen movies satisfying all boundaries; let `s(i)` be the hybrid score normalised to 0–1; sample with weight `p(i) ∝ (1 − a)·s(i)³ + a` where *a* ∈ [0,1] is the adventurousness. a = 0 concentrates on top personalised items; a = 1 is uniform over *C*. If *C* is empty, report which boundary removes the most candidates.
+
 ## 6.6 Security and privacy design
 
 * Passwords: argon2id (or bcrypt) with per-user salt; rate-limited login; generic error messages.
@@ -90,6 +102,7 @@ Weights depend on the number of ratings *n_u* (cold < 5, warming 5–19, warm �
 * Input validation with Pydantic; parameterised queries via SQLAlchemy (no string-built SQL).
 * Secrets in environment variables, never in git (`.env` ignored).
 * Data minimisation, deletion cascade, CSV/JSON export (FR-04, FR-05, NFR-05).
+* No third-party requests from the browser before user action: trailer iframe created only after click; external ratings fetched server-side (NFR-16).
 
 ## 6.7 Quality-attribute tactics
 

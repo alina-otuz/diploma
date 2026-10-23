@@ -32,6 +32,12 @@
 | FR-40…FR-42 | ✓ | ✓ | ✓ | ✓ | | | ✓ | ✓ |
 | FR-44…FR-46 | ✓ | ✓ | ✓ | | | | | ✓ |
 | FR-50…FR-52 | ✓ | | | | | | | ✓ |
+| FR-60, FR-61 | ✓ | ✓ | ✓ | | | | ✓ | ✓ (mood validation) |
+| FR-62 | ✓ | ✓ | ✓ | | | | ✓ | |
+| FR-63, FR-64 | | ✓ | ✓ | | ✓ (NFR-16) | ✓ | | |
+| FR-65 | | ✓ | ✓ | | | | | |
+| FR-67 | ✓ | ✓ | ✓ | | | | | |
+| NFR-14, 15, 16 | | | | | ✓ (16) | | ✓ (15) | ✓ (14) |
 | NFR-01 | | | | ✓ | | | | |
 | NFR-03…05 | | ✓ | | | ✓ | | | |
 | NFR-06 | | | | | | | ✓ | |
@@ -51,6 +57,10 @@
 | TC-007 | FR-44 | Rate Horror 5★, refresh | list changes within 2 s |
 | TC-008 | FR-52 | Run evaluation twice with seed 42 | identical metrics (4 d.p.) |
 | TC-009 | FR-04 | Delete account | no rows with user id in any table |
+| TC-011 | FR-62 | Randomizer with boundaries, 20 calls | all results inside boundaries, none watched/hidden, ≥ 5 distinct |
+| TC-012 | FR-63 / NFR-16 | Load details page with network log | no YouTube request until "Trailer" is clicked |
+| TC-013 | FR-67 | Mark watched, reload recommendations | title absent, no rating row created |
+| TC-014 | FR-60 | Select mood "Adrenaline" | all results above θ for that mood |
 | TC-010 | NFR-01 | Locust 50 users × 5 min | p95 ≤ 500 ms, errors < 1 % |
 
 ## 7.4 Offline evaluation of the recommender
@@ -61,6 +71,8 @@
 * **RQ2.** Which method family (content-based, item-kNN, ALS/BPR) works best, and does the hybrid improve on its best component?
 * **RQ3.** How does performance differ for **cold** (< 5 ratings), **warming** (5–19) and **warm** (≥ 20) users?
 * **RQ4.** What is the accuracy–diversity/novelty trade-off of the MMR re-ranking?
+* **RQ5.** How well do automatically derived mood labels agree with human judgement (NFR-14)?
+* **RQ6.** Does mood filtering / the randomizer reduce the time to choose a movie compared with browsing by genre only (NFR-15)?
 
 ### Data
 
@@ -120,6 +132,14 @@
 | Offline ≠ online value | Complement with user study (7.5) |
 | Small data → noisy results | 5 seeds, bootstrap CIs |
 
+## 7.4b Mood-label validation experiment (RQ5)
+
+1. Sample 50 movies stratified by genre and popularity (seed fixed).
+2. Two annotators independently mark, for each of the 8 moods, whether the movie fits (yes/no), using a written guideline; compute **Cohen kappa** per mood; resolve disagreements by discussion to get a consensus.
+3. Compare automatic labels (tag-genome mapping; fallback; optional zero-shot baseline) to the consensus: precision, recall, F1 per mood; tune thresholds θ on half the sample and report on the other half.
+4. Success: macro-precision ≥ 70 % on the held-out half (NFR-14). Report weak moods honestly and consider dropping or merging them.
+5. Limitation to state: two annotators from the same background; small sample.
+
 ## 7.5 User study (usability and perceived quality)
 
 * **Participants:** ≥ 15 (target 20) adult film viewers outside the development circle where possible; informed consent, anonymous IDs, no personal data beyond what the app stores; right to withdraw. Check whether the university requires ethics approval for human-subject studies.
@@ -127,11 +147,13 @@
   1. Onboarding (genres + rate ≥ 5 movies + ~10 more) — timed.
   2. Blind comparison of three top-10 lists: **Popularity**, **Hybrid**, **Hybrid + explanations/diversity** (labelled A/B/C, random order). Participants mark each item *interested / not interested / already seen*, and rate list-level satisfaction.
   3. Task-based usability tasks: find a movie by search, add to watchlist, hide a recommendation, delete account (dry-run).
-  4. Questionnaires: **SUS** [Brooke1996] and selected **ResQue** items [Pu2011] (perceived accuracy, novelty, diversity, transparency, satisfaction; 5-point Likert).
-  5. Short semi-structured interview (what was surprising, was the explanation useful?).
+  4. Time-to-decision task (RQ6, NFR-15): "Pick something to watch tonight." Condition A: genre filters + search only. Condition B: mood filter + randomizer + recommendations (order counterbalanced, different mood scenarios). Record time and satisfaction with the choice.
+  5. Questionnaires: **SUS** [Brooke1996] and selected **ResQue** items [Pu2011] (perceived accuracy, novelty, diversity, transparency, satisfaction; 5-point Likert).
+  6. Short semi-structured interview (what was surprising, was the explanation useful?).
 * **Measures:** item-level precision (share marked *interested*), list satisfaction, onboarding time, task success/time/errors, SUS score, ResQue means, qualitative themes.
 * **Analysis:** descriptive statistics + paired Wilcoxon tests across lists; SUS interpreted against the benchmark of 68; open responses coded thematically.
-* **Success criteria:** mean SUS ≥ 68; Hybrid list satisfaction > Popularity (p < 0.05 or CI excludes 0); ≥ 80 % task success.
+* **Priority check:** ask participants to rank the discovery features (mood, randomizer, trailers, hide watched, external ratings) to compare with the interview-based priorities.
+* **Success criteria:** mean SUS ≥ 68; median time-to-decision in condition B ≤ 5 min and shorter than A; Hybrid list satisfaction > Popularity (p < 0.05 or CI excludes 0); ≥ 80 % task success.
 
 ## 7.6 Performance and security checks
 

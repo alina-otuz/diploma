@@ -75,10 +75,25 @@ Weights: relational fit 30 %, JSON/flexibility 10 %, concurrency/production read
 |---|---|---|---|
 | **MovieLens (ml-latest-small / 1M / 25M)** | Ratings, tags, links to IMDb/TMDB ids | Research/education use; no redistribution | Training & offline evaluation |
 | **TMDB API** | Posters, overviews, cast, keywords | Free for non-commercial use with attribution; rate limits | Metadata enrichment |
-| **OMDb API** | IMDb-style ratings, plot | Key required, limited free tier | Not used (TMDB sufficient) |
+| **OMDb API** (or similar) | IMDb / Rotten Tomatoes / Metacritic scores | Key required, limited free tier; check current terms and attribution | Used only for FR-64 (external ratings), server-side with caching; feature degrades gracefully |
+| **MovieLens Tag Genome** | Per-movie relevance of ~1,100 tags (e.g. "dark", "feel-good") | Part of larger MovieLens downloads (confirm which); same research licence | Source for mood labels (FR-60) |
+| **TMDB keywords, credits, videos** | Micro-topics, cast/director, trailer YouTube keys | Same TMDB terms | FR-61, FR-63, FR-65 |
 | Scraping IMDb/Kinopoisk | — | Against terms of service | **Rejected** |
 
 Start with **ml-latest-small** (≈ 100k ratings) for fast iteration, then scale up to **ml-1M or larger** for the final evaluation. (Confirm current dataset sizes on the GroupLens site.)
+
+### Mood/vibe labelling approaches (FR-60)
+
+| Approach | Pros | Cons | Decision |
+|---|---|---|---|
+| **Tag-genome → mood mapping** (curated tag lists per mood, weighted sum of relevance) | Transparent, reproducible, no extra cost | Genome covers older/popular titles better | ✅ primary |
+| TMDB keywords/genres heuristics | Covers new titles | Coarse | ✅ fallback |
+| Zero-shot text classification of overviews (embeddings/LLM) | Covers any title | Cost, reproducibility, harder to justify | Optional experiment, compared on the annotated sample |
+| Manual labelling | Highest quality | Not scalable | Only the 50-movie validation sample |
+
+### Trailer embedding
+
+Load YouTube only after the user clicks (click-to-load placeholder, privacy-enhanced embed domain) to satisfy NFR-16; fall back to a plain link if embedding is blocked.
 
 ## 4.7 Infrastructure and tooling
 

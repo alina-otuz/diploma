@@ -63,9 +63,22 @@ Acceptance criteria use Given / When / Then and are the source for the tests in 
 | FR-42 | The details page shows "Similar movies" (item-based). | M |
 | FR-43 | The home page shows "Because you liked X" rows for the user's top-rated films. | S |
 | FR-44 | Recommendations update after new feedback (within one page refresh for content/popularity signals; after the next scheduled retrain for CF/MF). | M |
-| FR-45 | The list is diversified (intra-list diversity re-ranking). | S |
+| FR-45 | The list is diversified (intra-list diversity re-ranking) to counter filter bubbles. | M |
 | FR-46 | The hybrid switches weights by the number of user ratings (cold start → warm). | M |
-| FR-47 | The user can adjust a "familiar ↔ adventurous" slider affecting novelty/diversity. | C |
+| FR-47 | The user can adjust a "familiar ↔ adventurous" slider affecting novelty/diversity (shares logic with the Randomizer, FR-62). | C |
+
+### Discovery from user research (DISC) — see [doc 1a](01a-user-research.md)
+
+| ID | Requirement | Pri | Evidence |
+|---|---|---|---|
+| FR-60 | The user can filter and search the catalogue and the recommendations by **mood/vibe** (one or more of ~8 predefined moods). | M | Users 1, 3 |
+| FR-61 | The user can filter by **micro-topic tags** (e.g. mythology, superheroes) taken from TMDB keywords / tag genome. | M | Users 1, 4 |
+| FR-62 | A **Randomizer** returns a random movie within user-defined boundaries (genres to include/exclude, mood, year range, minimum rating, maximum runtime) and an *adventurousness* setting; it never returns watched/hidden titles. | M | User 2 |
+| FR-63 | The details page opens an **embedded trailer** in a modal; the player loads only after the user clicks. | M | Users 1, 3 |
+| FR-64 | The details page shows **external critic/audience ratings** (IMDb, Rotten Tomatoes, Metacritic) with source labels, when available. | S | Users 2, 3 |
+| FR-65 | The user can filter by **cast member or director**; a person page lists their movies in the catalogue. | S | Users 3, 4 |
+| FR-67 | The user can mark a movie as **watched** without rating it, and toggle **Hide watched** in browse/search results; watched titles never appear in recommendations. | M | User 4 |
+| — | Dubbing indicator and review-phrase search were requested in interviews but **descoped by the author** (no reliable data source / sparse review data). | — | Users 1, 3 |
 
 ### Administration & ML pipeline (ADM)
 
@@ -93,6 +106,9 @@ Acceptance criteria use Given / When / Then and are the source for the tests in 
 | NFR-11 | Reproducibility | All experiments reproducible from a single command with fixed seeds and documented dataset version. | M |
 | NFR-12 | Portability | Entire system starts with `docker compose up`. | M |
 | NFR-13 | Quality | Hybrid beats popularity baseline on NDCG@10 (95 % CI excludes 0). | M |
+| NFR-14 | Quality | Automatic mood labels agree with human annotators: precision ≥ 70 % on a 50-movie annotated sample (inter-annotator Cohen kappa reported). | M |
+| NFR-15 | Efficiency | A study participant finds a movie they want to watch using mood/randomizer in ≤ 5 minutes (users reported about 20 minutes today). | S |
+| NFR-16 | Privacy | No request to third-party hosts (YouTube, rating APIs) is made from the browser before a user action; external ratings are fetched server-side and cached. | M |
 
 ## 5.4 Acceptance criteria
 
@@ -131,6 +147,16 @@ Acceptance criteria use Given / When / Then and are the source for the tests in 
 * **FR-45** — *Given* a recommendation list, *then* its intra-list diversity (1 − mean pairwise genre similarity) is not lower than that of the same list without re-ranking by more than the accuracy-loss budget defined in doc 07 (≤ 2 % NDCG loss).
 * **FR-46** — *Given* two users with 0 and 50 ratings, *then* the weight configuration returned in debug mode differs (cold-start weights vs. warm weights) as specified in the config file.
 
+### DISC
+
+* **FR-60** — *Given* the catalogue with mood labels, *when* the user selects the mood "Adrenaline", *then* only movies whose mood score for it exceeds the configured threshold are listed, ordered by relevance; selecting two moods returns movies matching both (AND) or either (OR toggle); with no matches an empty state is shown.
+* **FR-61** — *Given* the tag "mythology", *when* it is selected, *then* every result carries that tag; tags combine with genre and mood filters.
+* **FR-62** — *Given* boundaries {include Sci-Fi, year ≥ 2000, max runtime 130 min, mood "Mind-bending", adventurousness 70 %}, *when* the user clicks "Surprise me" 20 times, *then* every returned movie satisfies all boundaries, none is watched/hidden/rated, and ≥ 5 distinct titles appear. *Given* adventurousness 0 %, *then* results come from the top 10 personalised candidates; at 100 %, from any candidate within bounds. *Given* boundaries with no candidates, *then* a message says which boundary to relax.
+* **FR-63** — *Given* a movie with a trailer, *when* the details page loads, *then* no request to YouTube is made; *when* the user clicks "Trailer", *then* a modal opens with the player, closes with Esc/close button, and focus returns to the trigger. *Given* a movie without a trailer, *then* the button is hidden.
+* **FR-64** — *Given* a movie with external ratings, *then* each score names its source; *given* the external API is unavailable, *then* the page renders without ratings and without error.
+* **FR-65** — *Given* the director "Denis Villeneuve", *when* the user selects the name, *then* all catalogue movies directed by him are listed.
+* **FR-67** — *Given* a movie marked watched, *then* it disappears from recommendations and, with "Hide watched" on, from lists; it can be unmarked; marking watched does not create a rating.
+
 ### ADM
 
 * **FR-50** — *Given* an empty database and a valid TMDB key, *when* `python -m ml.cli ingest` runs, *then* movies, genres, links and ratings tables are filled and the command prints counts matching the source files.
@@ -145,18 +171,21 @@ Acceptance criteria use Given / When / Then and are the source for the tests in 
 * **NFR-06** — User study (≥ 15 participants): median onboarding time ≤ 3 min; mean SUS ≥ 68.
 * **NFR-07** — Lighthouse accessibility ≥ 90 on home, details, and onboarding pages; axe reports no critical violations.
 * **NFR-12** — Fresh clone + `docker compose up` brings up all services; health endpoint returns 200 in ≤ 2 minutes.
+* **NFR-14** — Two annotators independently label 50 sampled movies for each of the 8 moods; report Cohen kappa and precision/recall of the automatic labels against the consensus.
+* **NFR-15** — User-study task "choose a movie for tonight" is timed; median ≤ 5 min.
+* **NFR-16** — Browser network log on page load shows no third-party requests; the trailer request appears only after clicking "Trailer".
 * **NFR-13** — Evaluation report: NDCG@10 (hybrid) − NDCG@10 (popularity) > 0 with 95 % bootstrap CI over users excluding 0.
 
 ## 5.5 Requirement dependencies and priorities for the MVP
 
 * **Vertical slice 1** (weeks 4–7): FR-01, 02, 10, 11, 13, 20, 21, 30, 31, 32 (+ popularity baseline).
 * **Vertical slice 2** (weeks 8–11): FR-40, 41, 42, 44, 46, 50–52.
-* **Vertical slice 3** (weeks 12–14): FR-22, 45, NFR-01…13, user study.
+* **Vertical slice 3** (weeks 12–14): FR-22, 45, 60–63, 67, NFR-01…16, user study. Should items (FR-64, 65) only if time remains.
 * Cut order if time is short: Could → Should (in reverse list order) → never Must.
 
 ## 5.6 Open questions
 
-1. Hosted demo, or local-only demonstration at the defence?
+1. Hosted demo or local-only demonstration at the defence? (the proposal lists a hosted demo as a deliverable)
 2. UI language: English only or Russian/Kazakh too?
 3. Final dataset size (ml-1M vs. 25M) given the hardware available.
 4. Does the university require a specific documentation template (e.g. GOST)?

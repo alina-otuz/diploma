@@ -35,13 +35,33 @@ Legend: ● strong / yes · ◐ partial / limited · ○ weak / no · ? verify
 
 *(Cells marked ? could not be asserted from general knowledge — verify.)*
 
+### 3.2b Discovery features requested in the user interviews
+
+Based on [doc 1a](01a-user-research.md). Same legend and the same caveat: verify in the live products.
+
+| Feature | Netflix | IMDb | Letterboxd | MovieLens | JustWatch | Kinopoisk | **CineMatch (target)** |
+|---|---|---|---|---|---|---|---|
+| Mood / vibe filtering | ◐ (curated mood-style rows/categories) | ○ | ◐ (themes/tags, community lists) | ◐ (tag genome / tag search) | ○ | ? | ● (FR-60) |
+| Micro-topic tags | ◐ | ◐ (keywords) | ● (themes, nanogenres) | ◐ (tags) | ○ | ? | ● (FR-61) |
+| Randomizer with user boundaries | ○ ("play something" only) | ○ | ◐ (random from list) | ○ | ○ | ? | ● (FR-62) |
+| Embedded trailers | ● | ● | ◐ | ○ | ◐ | ● | ● (FR-63) |
+| External critic ratings shown | ○ | ◐ (own + Metascore) | ◐ | ○ | ◐ | ◐ | ◐ (FR-64, via API) |
+| Hide watched / not interested | ◐ | ○ | ◐ (watched toggle) | ● | ◐ | ? | ● (FR-67, FR-22) |
+| Cast/director filtering | ◐ | ● | ● | ○ | ◐ | ● | ◐ (FR-65) |
+
+**Reading:** no single reviewed product combines personalised ranking, mood filtering, a bounded randomizer and a visible "why" in one clean interface. Individual features exist (Letterboxd themes, Netflix mood rows, IMDb trailers), so CineMatch's contribution is the **integration plus transparent evaluation**, not any single feature.
+
+### 3.2c "Current practice" reported by interviewees
+
+Interviewees named unofficial streaming aggregator sites (e.g. HDRezka, KinoGo) as where they watch. They are mentioned only as the user-reported baseline: users cited ad banners, outdated UI, no central watchlist and weak recommendations. They are **not** a design benchmark or a legal model, and should not be linked in the thesis.
+
 ## 3.3 Observations
 
 1. **Closed personalization (Netflix)** is the quality benchmark but only recommends from its own catalogue and does not expose reasoning beyond brief labels.
 2. **Databases and social sites (IMDb, Letterboxd, Kinopoisk)** hold rich metadata and communities, but personalization is secondary to browsing, charts and curation.
 3. **MovieLens** is closest in function but is a research tool with a dated interface and minimal explanation of individual items.
 4. **JustWatch** solves a different problem (where to watch), complementary rather than competing.
-5. **Gap:** a clean, free, explainable, *catalogue-agnostic* recommender with onboarding for cold start and visible user control — this is CineMatch's niche.
+5. **Gap:** a clean, free, explainable, *catalogue-agnostic* recommender with onboarding for cold start, **mood-based discovery**, a **bounded randomizer to escape filter bubbles**, and visible user control — this is CineMatch's niche.
 
 ## 3.4 What we adopt and what we avoid
 
@@ -59,3 +79,5 @@ Legend: ● strong / yes · ◐ partial / limited · ○ weak / no · ? verify
 * The platform treats **cold start as a first-class flow**, with separate evaluation for new vs. active users.
 * **Transparent, reproducible evaluation** of several algorithm families under one protocol.
 * **Privacy-minimal** design with export and deletion.
+* **Mood and micro-topic discovery grounded in user research**, with a validation experiment for the mood labels.
+* **Bounded randomizer** that gives users control over novelty (anti-filter-bubble).
