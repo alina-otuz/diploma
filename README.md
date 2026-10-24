@@ -1,9 +1,11 @@
 # CineRec — Personalized Movie Recommendation Web Platform
 
-> Diploma project: **Development of a Personalized Movie Recommendation Web Platform**
-> Author: _Alina Otuzbayeva_ · Supervisor: _Chingiz Kharmysov_ · University: _Astana IT University / Software Engineering_ · Year: 2026
+> Diploma project: Development of a personalized movie recommendation web platform  
+> Author: Alina Otuzbayeva · Supervisor: Chingiz Kharmysov · University: Astana IT University / Software Engineering · Year: 2026
 
-CineRec is a web platform that helps a user decide **what to watch next**. It learns each user's taste from ratings, a watchlist and "not interested" feedback, and produces a ranked, *explained* list of movies ("Because you rated *Inception* 5★"). The recommendation engine is a **hybrid** of content-based filtering, item-based collaborative filtering and matrix factorization, evaluated offline on MovieLens and with a small user study.
+CineRec is a movie recommendation system designed to help users decide what to watch next. The platform combines user preferences, ratings, watchlist data, and a rejection signal to generate ranked and explained suggestions. The underlying approach is a hybrid recommendation system that combines content-based filtering, collaborative filtering, and matrix factorization.
+
+This repository contains the diploma project documentation, architecture materials, diagrams, and a working interactive prototype of the user experience.
 
 ---
 
@@ -11,108 +13,36 @@ CineRec is a web platform that helps a user decide **what to watch next**. It le
 
 | Stage | Status |
 |---|---|
-| Proposal & scope | ✅ Done — [docs/01](docs/01-proposal-and-scope.md) |
-| Literature review, system & technology comparison | ✅ Done — [docs/02](docs/02-literature-review.md), [03](docs/03-existing-systems-comparison.md), [04](docs/04-technology-comparison.md) |
-| Requirements & acceptance criteria | ✅ Done — [docs/05](docs/05-requirements-and-acceptance-criteria.md) |
-| Architecture & diagrams (editable sources) | ✅ Done — [docs/06](docs/06-architecture.md) |
-| Prototype (clickable UI + toy recommender) | ✅ Done — [prototype/](prototype/) |
-| Verification & evaluation plan | ✅ Done — [docs/07](docs/07-verification-and-evaluation-plan.md) |
-| Task tracking | ✅ Backlog ready — [docs/08](docs/08-project-management.md) |
-| MVP implementation (backend, frontend, ML) | ⏳ Planned (see roadmap) |
+| Problem definition and project scope | ✅ Done — [documentation/01-proposal-and-scope.md](documentation/01-proposal-and-scope.md) |
+| Literature review | ✅ Done — [documentation/02-literature-review.md](documentation/02-literature-review.md) |
+| Existing systems comparison | ✅ Done — [documentation/03-existing-systems-comparison.md](documentation/03-existing-systems-comparison.md) |
+| Technology comparison | ✅ Done — [documentation/04-technology-comparison.md](documentation/04-technology-comparison.md) |
+| Requirements and acceptance criteria | ✅ Done — [documentation/05-requirements-and-acceptance-criteria.md](documentation/05-requirements-and-acceptance-criteria.md) |
+| Architecture and diagrams | ✅ Done — [documentation/06-architecture.md](documentation/06-architecture.md) |
+| Verification and evaluation plan | ✅ Done — [documentation/07-verification-and-evaluation-plan.md](documentation/07-verification-and-evaluation-plan.md) |
+| Project management and backlog | ✅ Done — [documentation/08-project-management.md](documentation/08-project-management.md) |
+| Interactive prototype | ✅ Done — [source code/index.html](source%20code/index.html) |
+| Full MVP implementation | ⏳ Planned |
 
-## Repository contents (checklist for the diploma requirements)
+---
 
-| Required item | Where |
-|---|---|
-| Completed project README | this file |
-| Project proposal and scope | [`docs/01-proposal-and-scope.md`](docs/01-proposal-and-scope.md) |
-| Literature review | [`docs/02-literature-review.md`](docs/02-literature-review.md) |
-| Existing system comparison | [`docs/03-existing-systems-comparison.md`](docs/03-existing-systems-comparison.md) |
-| Technology comparison | [`docs/04-technology-comparison.md`](docs/04-technology-comparison.md) |
-| Initial requirements & acceptance criteria | [`docs/05-requirements-and-acceptance-criteria.md`](docs/05-requirements-and-acceptance-criteria.md) |
-| Architectural diagrams (+ editable sources) | [`docs/06-architecture.md`](docs/06-architecture.md), sources in [`docs/diagrams/src/`](docs/diagrams/src) (Mermaid `.mmd`), renders in [`docs/diagrams/rendered/`](docs/diagrams/rendered) |
-| Prototype materials | [`prototype/index.html`](prototype/index.html) (open in a browser) + [`prototype/README.md`](prototype/README.md) |
-| Verification & evaluation plan | [`docs/07-verification-and-evaluation-plan.md`](docs/07-verification-and-evaluation-plan.md) |
-| YouTrack link with assigned, prioritized tasks | **<https://REPLACE-ME.youtrack.cloud/agiles/…>** ← _paste your board link here_; backlog to import: [`docs/youtrack/backlog.csv`](docs/youtrack/backlog.csv), overview: [`docs/08-project-management.md`](docs/08-project-management.md) |
+## Core idea
 
-## Key ideas
+1. Hybrid recommendation approach: popularity baseline, content-based filtering, item-based collaborative filtering, and matrix factorization.
+2. Explainability: every recommendation includes a clear reason such as “Because you liked Inception”.
+3. User-centered interaction: genres, ratings, watchlist, search, and “not interested” feedback are all part of the experience.
+4. Evaluation focus: precision, recall, NDCG, diversity, novelty, and user study metrics.
 
-1. **Hybrid recommender** — popularity baseline → content-based (TF-IDF on genres/keywords/overview) → item-kNN CF → implicit-feedback matrix factorization (ALS/BPR) → weighted hybrid with cold-start fallbacks.
-2. **Explainability** — every recommendation carries a human-readable reason and the user can say *not interested*.
-3. **Measurable quality** — Precision/Recall/NDCG@K, coverage, novelty and diversity offline; SUS and ResQue-style questionnaire in a user study.
-4. **Privacy by design** — minimal data, hashed passwords, account deletion and data export.
+---
 
-## Planned technology stack (see [docs/04](docs/04-technology-comparison.md) for the reasoning)
+## Repository structure
 
-| Layer | Choice |
-|---|---|
-| Frontend | React + TypeScript + Vite |
-| Backend API | Python 3 + FastAPI |
-| Database | PostgreSQL |
-| Cache | Redis |
-| ML | pandas, scikit-learn, `implicit` (ALS/BPR); PyTorch for optional stretch goals |
-| Data | MovieLens (training/evaluation), TMDB API (metadata, posters) |
-| Delivery | Docker Compose, GitHub Actions CI |
-| Quality | pytest, Playwright, Locust, Lighthouse/axe |
-
-## Architecture at a glance
-
-```mermaid
-flowchart LR
-  U[User browser<br/>React SPA] -->|HTTPS / JSON| API[FastAPI backend<br/>modular monolith]
-  API --> DB[(PostgreSQL)]
-  API --> C[(Redis cache)]
-  API -->|loads model artifacts| M[[Model store<br/>similarity + factors]]
-  T[Offline training job<br/>Python CLI] -->|reads| DB
-  T -->|writes| M
-  API -.->|metadata, posters| TMDB[(TMDB API)]
-```
-
-More diagrams (use cases, containers, ER, sequence, pipeline, deployment): [docs/06-architecture.md](docs/06-architecture.md).
-
-## Prototype
-
-Open `prototype/index.html` in any browser (no build step). Pick genres, rate a few films, and watch the "Recommended for you" row re-rank with explanations. It runs a small content-based recommender in the browser on 28 illustrative movies. Details: [prototype/README.md](prototype/README.md).
-
-## Roadmap (16 weeks, adjust to your university calendar)
-
-| Weeks | Milestone |
-|---|---|
-| 1–2 | Proposal, scope, literature review, requirements (✅ this repo) |
-| 3 | Architecture, prototype, YouTrack backlog (✅ this repo) |
-| 4–5 | Data ingestion (MovieLens + TMDB), DB schema, auth |
-| 6–7 | Catalog, search, ratings, watchlist, onboarding |
-| 8–9 | Baseline + content-based + item-kNN recommenders, offline evaluation harness |
-| 10–11 | Matrix factorization, hybrid, cold-start, explanations |
-| 12 | Recommendation UI integration, caching, performance tuning |
-| 13 | Testing (unit/API/E2E/load/accessibility), user study |
-| 14 | Analysis of results, fixes |
-| 15–16 | Thesis text, defence slides, final polish |
-
-## Getting started (planned — will work once the MVP lands)
-
-```bash
-git clone <this-repo>
-cd cinerec
-cp .env.example .env            # add TMDB_API_KEY
-docker compose up --build       # api, web, postgres, redis
-python -m ml.cli ingest         # load MovieLens + TMDB metadata
-python -m ml.cli train          # build model artifacts
-open http://localhost:5173
-```
-
-## Data, licences and attribution
-
-* **MovieLens** — for research/education only; do not redistribute the raw files in this repo. Cite: Harper & Konstan, *The MovieLens Datasets: History and Context*, ACM TiiS 5(4), 2015.
-* **TMDB** — this product uses the TMDB API but is not endorsed or certified by TMDB. Keep the attribution in the UI footer and check their current terms before any public deployment.
-
-## Repository layout
-
-```
+```text
 cinerec/
 ├── README.md
-├── docs/
+├── documentation/
 │   ├── 01-proposal-and-scope.md
+│   ├── 01a-user-research.md
 │   ├── 02-literature-review.md
 │   ├── 03-existing-systems-comparison.md
 │   ├── 04-technology-comparison.md
@@ -120,7 +50,76 @@ cinerec/
 │   ├── 06-architecture.md
 │   ├── 07-verification-and-evaluation-plan.md
 │   ├── 08-project-management.md
-│   ├── diagrams/src/        # editable Mermaid sources
-│   ├── diagrams/rendered/   # SVG/PNG exports
-└── prototype/               # clickable prototype
+├── diagrams/
+│   ├── src/
+│   └── rendered/
+├── source code/
+│   ├── README.md
+│   ├── index.html
+│   └── recommended_page.PNG
+└── .gitignore
 ```
+
+---
+
+## Prototype
+
+The repository includes a clickable prototype that demonstrates the user flow and core recommendation logic. It can be opened directly in a browser without installation.
+
+Quick start:
+
+```bash
+# open the prototype in a browser
+# Windows
+start "" "source code\index.html"
+
+# macOS
+open "source code/index.html"
+
+# Linux
+xdg-open "source code/index.html"
+```
+
+For more details, see [source code/README.md](source%20code/README.md).
+
+---
+
+## Architecture and documentation
+
+The main design work and project documentation are located in the [documentation/](documentation/) folder. The architectural diagrams and Mermaid sources are in [diagrams/src/](diagrams/src/) and [diagrams/rendered/](diagrams/rendered/).
+
+Important documents:
+
+- [documentation/01-proposal-and-scope.md](documentation/01-proposal-and-scope.md)
+- [documentation/05-requirements-and-acceptance-criteria.md](documentation/05-requirements-and-acceptance-criteria.md)
+- [documentation/06-architecture.md](documentation/06-architecture.md)
+- [documentation/07-verification-and-evaluation-plan.md](documentation/07-verification-and-evaluation-plan.md)
+
+---
+
+## Planned technology stack
+
+| Layer | Choice |
+|---|---|
+| Frontend | React + TypeScript + Vite |
+| Backend | Python + FastAPI |
+| Database | PostgreSQL |
+| Cache | Redis |
+| ML | pandas, scikit-learn, implicit |
+| Data sources | MovieLens, TMDB |
+| Deployment | Docker Compose |
+| Testing | pytest, Playwright |
+
+---
+
+## Data and attribution
+
+- MovieLens is used for research and educational purposes; raw datasets should not be redistributed in this repository.
+- TMDB data is used for metadata and poster enrichment and must be used according to TMDB terms and attribution requirements.
+
+---
+
+## License and project context
+
+This project is a diploma thesis work and is intended for academic and learning purposes. The repository is organized to support the full project lifecycle: research, design, requirements, architecture, evaluation, and prototype demonstration.
+

@@ -1,19 +1,12 @@
 # 8. Project Management and YouTrack
 
-## 8.1 YouTrack project
+## 8.1 YouTrack and Git project
 
-**Board / project link:** <https://REPLACE-ME.youtrack.cloud/agiles/…> ← _paste your link here and in the README._
+**Board / project link:** 
 
-YouTrack Cloud offers a free tier for small teams. Make sure the link is viewable by your supervisor/reviewers (grant them access or enable public/guest access as your university allows).
+https://cinerec.youtrack.cloud/agiles/204-1/current
+https://github.com/alina-otuz/diploma
 
-### Setup steps (10 minutes)
-
-1. Create a YouTrack project **CINE** (Scrum template).
-2. Import the backlog: *Administration → Import → CSV* (or *Projects → CINE → Import issues from CSV*) with [`youtrack/backlog.csv`](youtrack/backlog.csv). Map columns: Summary → Summary, Description → Description, Assignee → Assignee, Priority → Priority, Type → Type, Subsystem → Subsystem, Sprint → Sprint, State → State. If a field is missing in your project, add it in *Custom fields* or ignore it. If CSV import is not available on your plan, create the issues manually from [`youtrack/backlog_table.md`](youtrack/backlog_table.md).
-3. Before generating the CSV, set `ASSIGNEE` in [`youtrack/generate_backlog.py`](youtrack/generate_backlog.py) to your YouTrack login and run `python generate_backlog.py`; otherwise bulk-assign all issues to yourself after import.
-4. Create an **agile board** (Scrum) with Sprint 1…8; set sprint dates to match your calendar.
-5. Mark Sprint 1 tasks that are already done in this repo as **Done**.
-6. Paste the board link into the README table.
 
 ## 8.2 Working method
 

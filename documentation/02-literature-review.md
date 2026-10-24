@@ -1,110 +1,107 @@
-# 2. Literature Review
+# Executive Critical Review and Systematic Literature Analysis of Movie Recommendation Systems
 
-> **Note to the author:** the sources below are well-known works in the field, cited from memory. Before submission, verify every citation (volume/pages/DOI) in Google Scholar, and add 5–10 recent papers (2023–2026) on your chosen focus (e.g. explainability, cold start, fairness) so the review reflects current work. Citation keys like [Koren2009] map to section 2.9.
+## Executive Summary
 
-## 2.1 What is a recommender system?
+The rapid proliferation of digital streaming platforms (e.g., Netflix, Amazon Prime Video, Disney+, Viu) and online movie repositories has transformed entertainment consumption while precipitating acute information overload [1, 2]. Modern Movie Recommendation Systems (MRSs) serve as essential decision-support engines that filter vast movie catalogs to deliver personalized suggestions [3, 4]. Over the past decade, MRS research has evolved from rudimentary user/item rating correlation matrices to complex multi-modal deep learning, aesthetic visual feature extraction, demographic virtual user clustering, natural language sentiment mining, and metaheuristic optimization [1, 5–8].
 
-A recommender system predicts which items from a large catalogue a particular user is likely to value, and presents them as a ranked list [Ricci2022]. In the movie domain the data are typically *users × items* interactions: explicit (star ratings) or implicit (watched, clicked, added to watchlist). Two formulations dominate:
+This critical review and structured literature analysis examines **12 key scientific publications**—comprising 11 state-of-the-art studies published within the last five years (2019–2024) alongside an essential foundational work [9]—to systematically evaluate the technical paradigms, quantitative benchmarks, systemic bottlenecks, and critical trade-offs in modern movie recommender systems.
 
-* **Rating prediction** — estimate the rating a user would give (evaluated with RMSE/MAE). Popularised by the Netflix Prize [Bennett2007].
-* **Top-N recommendation** — produce a ranked list of N items (evaluated with Precision/Recall/NDCG). Offline studies show these two goals can lead to different conclusions, and top-N ranking is closer to the real product task [Cremonesi2010], [Herlocker2004].
+---
 
-CineMatch targets **top-N recommendation** with explicit feedback converted to a ranking problem.
+## 1. Critical Methodological Review
 
-## 2.2 Content-based filtering
+### 1.1 Traditional & Dimensionality-Reduced Collaborative Filtering
+Collaborative Filtering (CF) remains the baseline paradigm in recommender system research, operating on the premise that users who agreed in the past will agree in the future [1, 3]. CF approaches are bifurcated into **Memory-Based** (User-based and Item-based KNN using Pearson Correlation or Cosine Similarity) and **Model-Based** techniques (Singular Value Decomposition [SVD], Matrix Factorization [MF], and Probabilistic Matrix Factorization [PMF]) [2, 10]. 
 
-Content-based methods recommend items whose attributes are similar to items the user liked: items and user profiles are vectors over features such as genres, cast, keywords or text (TF-IDF, embeddings), and ranking uses cosine similarity [Pazzani2007], [Lops2011].
+*   **Bhowmick et al. (2021)** [10] conducted an empirical comparative evaluation of eight recommendation techniques on the MovieLens Latest Small dataset (100,836 ratings across 9,742 movies by 610 users). Their synthesis revealed that while simple Cosine and Pearson similarity models offer intuitive similarity matching, they suffer from heavy computational complexity ($O(M \cdot N)$) and fail when rating matrices exceed 90–95% sparsity. Combining Term Frequency-Inverse Document Frequency (TF-IDF) metadata vectorization with SVD latent space compression significantly reduced dimensionality while maintaining recommendation precision.
+*   **Arora et al. (2014)** [9] provided an early foundational framework for web-based hybrid recommendation engines, demonstrating how combining item-to-item CF with distance metrics (Euclidean and Cosine) mitigates isolated memory-based CF failures in e-commerce environments. However, both works highlight that classic CF cannot overcome the **new-item and new-user cold-start problems** without auxiliary side information.
 
-* ✅ Works for new items (no interactions needed), transparent explanations ("same genre/keywords").
-* ❌ Over-specialisation ("filter bubble"), requires good metadata, cannot capture taste beyond the features.
+### 1.2 Deep Learning, Multi-Modal & Aesthetic-Aware Content Filtering
+Recent advances have shifted toward content-based filtering (CBF) augmented by deep neural architectures, extracting deep semantic, visual, and textual features to eliminate dependence on user ratings [5, 6].
 
-## 2.3 Collaborative filtering (CF)
+*   **Chen et al. (2019)** [5] introduced the **Aesthetic-Aware Unified Visual Content Matrix Factorization (UVMF-AES)** model published in *IEEE Access*. Recognizing that visual poster art and cinematic still frames convey emotional tone and artistic appeal, the authors integrated a 16-layer VGG CNN (for object/scene content) and an OWACNN network (for visual aesthetics) into a probabilistic matrix factorization framework. Evaluated on MovieLens and IMDb datasets, UVMF-AES achieved a state-of-the-art Root Mean Square Error (**RMSE of 0.691** on MovieLens and **0.687** on IMDb), drastically outperforming baseline PMF (RMSE 0.792). This visual extraction significantly alleviates new-item cold start, though at the expense of high offline GPU training overhead.
+*   **Sahu et al. (2022)** [6] proposed an early production-stage predictive framework in *IEEE Access* that forecasts a film's financial popularity and target audience prior to release. Using intrinsic pre-production metadata (genres, director, top-3 cast, keywords, synopses) from TMDb and voting data from IMDb, the authors combined CBF vector space matching with a **1D Convolutional Neural Network (1D-CNN)** for 6-tier popularity classification and **Fuzzy C-Means clustering** for 4-age-group demographic profiling. Their model achieved a multi-class prediction accuracy of **96.8%**, demonstrating how deep learning can transform recommender systems into prescriptive financial risk-management tools for film investors.
+*   **Kapoor et al. (2020)** [11] explored NLP-driven textual feature extraction from plot overviews using Count Vectorizer and TF-IDF paired with KNN classification, verifying that detailed textual summaries effectively substitute for absent user interaction logs during initial film release phases.
 
-CF uses only the interaction matrix: users with similar histories like similar things.
+### 1.3 Real-Time, Demographic-Clustered & Scalable System Prototypes
+A major critique of advanced deep learning and matrix factorization models is their computational latency, rendering real-time web deployment challenging [7, 8].
 
-* **User-based CF** — GroupLens [Resnick1994] pioneered neighbourhood methods; simple but scales poorly with many users.
-* **Item-based CF** — precompute item-item similarities offline; faster and more stable [Sarwar2001], [Linden2003] (Amazon's production approach). Good fit for explanations ("because you liked X").
-* **Matrix factorization (MF)** — learns latent factors for users and items; a core part of the winning Netflix Prize solutions [Koren2009]. For implicit feedback, weighted ALS [Hu2008] and Bayesian Personalized Ranking (BPR) [Rendle2009] optimise ranking directly.
-* **Neural CF** — NCF [He2017] replaced dot products with MLPs, but a careful re-evaluation showed that a well-tuned dot-product MF is highly competitive [Rendle2020], and reproducibility studies found many neural results hard to replicate or not better than tuned simple baselines [Dacrema2019]. This motivates CineMatch's decision to **start with strong simple baselines** and treat neural models as optional experiments.
-* **Sequential / session models** — GRU4Rec [Hidasi2016] and self-attention SASRec [Kang2018] model the order of interactions; valuable when timestamps/sessions are rich, a stretch goal here.
-* **Industrial deep models** — two-stage candidate generation + ranking at YouTube scale [Covington2016]; Netflix describes a portfolio of algorithms and personalised page layout [GomezUribe2015]. The lesson for CineMatch: blend multiple signals and personalise the *presentation*, not only the ranking.
+*   **Zhang et al. (2020)** [7] addressed this challenge in *Tsinghua Science and Technology* by designing the **Weighted KM-Slope-VU** framework and deploying it in a live public web platform called *MovieWatch*. To compress sparse high-dimensional user-item matrices ($R_{m \times n}$), the system applies K-Means clustering strictly to low-dimensional user demographic profile attributes (age, gender, occupation). Each cluster generates a single **Virtual Opinion Leader (Virtual User - VU)**, reducing the matrix to $uvR_{k \times n}$ before applying Weighted Slope One-VU predictors. This mathematical reduction lowered time complexity to $O(m + n^2)$, enabling sub-second real-time recommendation delivery while maintaining predictive accuracy comparable to offline SVD and SVD++ algorithms.
 
-## 2.4 Hybrid recommenders
+### 1.4 Hybrid Approaches & Web Sentiment Integration
+Hybrid recommender systems combine the complementary strengths of CBF and CF to resolve individual structural deficiencies [3, 4, 8].
 
-Hybrids combine approaches to offset weaknesses — weighted, switching, mixed, feature-combination, cascade, meta-level [Burke2002]. CineMatch uses a **weighted hybrid with switching for cold start**: for users with few ratings the content-based/popularity weight is higher; as interactions grow, CF/MF weights increase. Weights are tuned on a validation split.
+*   **Pavitha et al. (2022)** [8] developed a multi-stage hybrid framework in *Global Transitions Proceedings* that pairs Cosine Similarity content filtering with real-time web scraping of viewer reviews analyzed via sentiment classification. Testing machine learning models on scraped movie reviews, their Support Vector Machine (SVM) classifier achieved **98.63% accuracy** (AUC 0.984) and Naïve Bayes achieved **97.33% accuracy**. Integrating sentiment polarity scores directly into recommendation rankings ensures that highly similar movies with negative audience sentiment are automatically filtered out.
+*   **Lavanya et al. (2021)** [12] presented a comprehensive survey analyzing advanced hybrid paradigms, including autoencoder-driven genome tag compression (word2vec + autoencoder + MF), Recurrent Neural Networks (RNNs) for tracking temporal consumption shifts, and Linked Open Data (LOD) knowledge graphs (e.g., HI2Rec). Their analysis established that integrating external knowledge graphs effectively bridges the semantic gap and resolves long-tail recommendation cold starts.
 
-## 2.5 Cold start and sparsity
+### 1.5 Metaheuristics, Systematic Reviews & Bottleneck Mapping
+To establish a holistic overview of the technological landscape, systematic literature reviews (SLRs) provide macro-level evidence on research distribution and systemic challenges [1, 2, 4].
 
-New users and new items lack interactions [Schein2002]. Typical remedies: onboarding questionnaires (genres, rating a few popular-but-divisive films), content-based fallbacks, popularity priors, and demographic/contextual data. CineMatch uses genre selection + rating ≥ 5 items, then content-based and popularity-weighted scoring until enough ratings exist.
+*   **Ariyanto & Widiyaningtyas (2024)** [1] conducted a rigorous Systematic Literature Review in *ITEGAM-JETIA*, analyzing 66 primary studies selected from 27,187 articles published between 2019 and 2023 across ScienceDirect, SpringerLink, IEEE Xplore, and Taylor & Francis. Their meta-analysis identified that content-based filtering (33%) and machine learning/CF (41%) dominate recent literature. Crucially, they mapped the primary systemic barriers in MRS research: **Data Sparsity (46%)**, **Predictive Accuracy (22%)**, **Cold Start (13%)**, **Scalability (10%)**, and **Running Time (9%)**.
+*   **Jayalakshmi et al. (2022)** [2] conducted a PRISMA-guided SLR in *Sensors (MDPI)* focusing on algorithmic optimization, ML classifiers (K-means, PCA, SOM), and nature-inspired metaheuristics (Artificial Bee Colony [ABC], Cuckoo Search [CS], Firefly Algorithm, Grey Wolf Optimizer [GWO]). They established that metaheuristic swarm intelligence optimizes latent factor initialization in sparse matrix factorization, avoiding local minima and speeding up convergence in high-dimensional environments.
+*   **Goyani & Chaurasiya (2020)** [4] provided an extensive survey in *ELCVIA* examining matrix factorization, SVD, hybrid combiners (weighted, switching, cascade, feature-augmented), and advanced similarity metrics (Relevant Jaccard Mean Square Distance - RJMSD), underscoring the necessity of multi-metric evaluations (MAE, RMSE, Precision, Recall, Coverage, and Diversity) to prevent popularity bias.
 
-## 2.6 Evaluation of recommender systems
+---
 
-* **Offline accuracy**: Precision@K, Recall@K, MAP, NDCG [Jarvelin2002]; careful data splitting (per-user holdout or temporal split) and sampling choices matter [Cremonesi2010], [Herlocker2004].
-* **Beyond accuracy**: coverage, novelty, serendipity [Ge2010]; diversity of lists [Ziegler2005].
-* **User-centric**: perceived accuracy, novelty, satisfaction and trust via questionnaires such as ResQue [Pu2011]; usability via SUS [Brooke1996].
-* **Bias**: popularity, exposure and selection biases distort both training data and offline metrics [Chen2023].
+## 2. Structured Analysis Table of Publications
 
-CineMatch combines all three levels (offline accuracy, beyond-accuracy, user study) — see doc 07.
+The table below presents a systematic, multi-criteria comparison of the **12 scientific publications**, detailing their methodological paradigms, datasets, quantitative findings, targeted bottlenecks, and critical limitations.
 
-## 2.7 Explainability and user control
+| # | Source Publication & Citation | Core Methodology / Architectural Paradigm | Primary Filtering Class | Benchmark Dataset(s) Used | Key Quantitative Performance Metrics & Findings | Targeted Bottlenecks | Primary Limitations & Critical Trade-offs |
+| :-: | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **1** | **Ariyanto & Widiyaningtyas (2024)** [1] *ITEGAM-JETIA* | Systematic Literature Review (SLR) covering 66 primary studies (2019–2023) across 4 major databases. | SLR / Meta-Analysis | MovieLens (100K, 1M, 10M, 20M), Netflix, IMDb, TMDb | Quantified MRS research challenges: Sparsity (46%), Accuracy (22%), Cold Start (13%), Scalability (10%), Running Time (9%). | Systemic challenge mapping & classification | Excludes non-English literature; rapid post-2023 deep GNN advancements not fully covered. |
+| **2** | **Jayalakshmi et al. (2022)** [2] *Sensors (MDPI)* | PRISMA Systematic Review analyzing ML algorithms & nature-inspired metaheuristics (ABC, Cuckoo, Firefly, GWO). | SLR / Metaheuristics | MovieLens, Netflix, IMDb | Evaluated metaheuristic optimization for high-dimensional matrix factorization & hyperparameter tuning. | Sparsity, Cold Start, Convergence Speed | Metaheuristic algorithms incur high stochastic search time during parameter tuning. |
+| **3** | **Sahu et al. (2022)** [6] *IEEE Access* | Early-stage CBF metadata pipeline + 1D-CNN multiclass success classifier + Fuzzy C-Means age profiling. | DL Content-Based / Classification | TMDb 5000 Movies & Credits, IMDb Ratings Dataset | Achieved **96.8% accuracy** across 6 popularity classes; predicted target audience across 4 age groups. | Pre-release Cold Start, Financial Uncertainty | Dependent on early metadata availability and historical IMDb voting stability. |
+| **4** | **Pavitha et al. (2022)** [8] *Global Transitions Proc.* | Cosine similarity content recommendation paired with web-scraped review sentiment analysis (SVM & Naïve Bayes). | Hybrid CBF + Sentiment NLP | TMDB Movie Dataset + Scraped Live Movie Reviews | SVM achieved **98.63% accuracy** (AUC 0.984); Naïve Bayes achieved **97.33% accuracy** in review classification. | Overspecialization, Low Quality Recommendations | Web review scraping introduces noise; unreleased/unreviewed films lack sentiment data. |
+| **5** | **Bhowmick et al. (2021)** [10] *arXiv:2112.12463* | Empirical comparative evaluation of 8 techniques (Genre, Pearson, Cosine, K-Means, TF-IDF+SVD, Surprise KNN). | CF / CBF / SVD Comparative | MovieLens Latest Small (100k ratings, 9,742 movies, 610 users) | Combined TF-IDF + Collaborative SVD yielded optimal user-item recommendation balance & compressed sparse matrices. | Data Sparsity, Matrix Dimensionality | Standard SVD fails on absolute cold-start users with empty rating histories. |
+| **6** | **Lavanya et al. (2021)** [12] *IEEE ICAIS* | Comprehensive survey on hybrid deep learning (word2vec + Autoencoder + MF), RNN temporal tracking, & LOD HI2Rec. | Hybrid Deep Learning / Survey | MovieLens, OTT Streaming Logs | Demonstrated autoencoders & Linked Open Data knowledge graphs significantly reduce RMSE/MAE and sparsity. | Cold Start, Long-Tail Items, Temporal Dynamics | High architectural complexity; knowledge graph construction requires continuous maintenance. |
+| **7** | **Zhang et al. (2020)** [7] *Tsinghua Sci. & Tech.* | Weighted KM-Slope-VU (Demographic K-Means -> Virtual Opinion Leaders -> Weighted Slope One-VU matrix reduction). | Demographic CF / Scalable Prototype | MovieLens 100K/1M & Live Field Prototype (*MovieWatch*) | Reduced time complexity to $O(m + n^2)$; achieved real-time execution with RMSE competitive to SVD/SVD++. | Scalability, High Dimensionality, Computational Latency | Slight loss of individual user nuance due to averaging user profiles into cluster virtual leaders. |
+| **8** | **Goyani & Chaurasiya (2020)** [4] *ELCVIA* | Survey of CBF, CF (Memory/Model), Hybrid combiners, and advanced similarity metrics (RJaccard, RJMSD). | Comprehensive Literature Review | MovieLens (100k, 1M, 10M, 15M, Full), Yahoo! R4, FilmTrust | Taxonomy of evaluation metrics (MAE, RMSE, Precision, Recall, Diversity) and matrix completion models. | Sparsity, Overspecialization, Popularity Bias | Highlights lack of uniform open-source evaluation benchmarks across hybrid literature. |
+| **9** | **Singh et al. (2020)** [11] *IJEAT* | Content-based feature vectorization using Cosine Similarity and K-Nearest Neighbors (KNN) distance metrics. | Content-Based / Distance Metric | MovieLens / Kaggle Movie Metadata | Efficient genre-based vector space matching for quick user query recommendation. | Computational Simplicity | Susceptible to overspecialization; cannot infer latent user preferences or implicit feedback. |
+| **10** | **Kapoor et al. (2020)** [13] *IEEE Conference* | Textual content-based filtering utilizing NLP tools (Count Vectorizer, TF-IDF, KNN) on movie plot overviews. | Content-Based NLP | TMDB 5000 / MovieLens Datasets | Natural language overview vectorization effectively links plot themes to user preferences. | New Item Cold Start | Reliant on text description quality; fails to capture visual, auditory, or cast-level appeal. |
+| **11** | **Chen et al. (2019)** [5] *IEEE Access* | Aesthetic-Aware Unified Visual Content MF (UVMF-AES) combining VGG16 CNN visual features & OWACNN aesthetics. | Visual Deep Learning / PMF | MovieLens-100K / 1M and IMDb poster/frame datasets | Achieved **RMSE 0.691** (MovieLens) and **0.687** (IMDb), outperforming baseline PMF (0.792). | Data Sparsity, New Item Cold Start | High offline computational overhead for crawling and deep CNN feature extraction on image sets. |
+| **12** | **Arora et al. (2014)** [9] *IJCSMC* | Foundational hybrid web framework combining item-to-item CF, user profile correlation, and distance metrics. | Foundational Hybrid CF/CBF | MovieLens / E-commerce interaction logs | Demonstrated early integration of hybrid filtering to stabilize user rating predictions on web interfaces. | Single-Algorithm Failure, Prediction Inaccuracy | High memory footprint on expanding user bases; lacks modern deep neural vector spaces. |
 
-Explanations improve transparency, trust, scrutability and satisfaction when well designed [Tintarev2007]. Item-based and content-based methods yield natural explanations ("because you liked X", "shares genres Y, Z"). CineMatch attaches a reason to each recommendation and offers *not interested* feedback as a scrutability mechanism.
+---
 
-## 2.8 Datasets, ethics and privacy
+## 3. Synthesis & Analysis of Systemic Bottlenecks
 
-* **MovieLens** is the standard benchmark for movie recommendation research and comes in several sizes (100k to 25M ratings) [Harper2015]. Limitations: self-selected raters, popularity skew, ratings mostly from the US/Western audience.
-* **Privacy**: sparse rating data can re-identify individuals even when anonymised — shown on the Netflix Prize data [Narayanan2008]. CineMatch minimises collected data, hashes passwords, supports deletion/export and avoids third-party trackers.
-* **Purpose of recommendation**: recommenders should serve user (and not only business) goals; value-aware design matters [Jannach2016].
+A synthesis of the reviewed literature reveals five persistent systemic bottlenecks that govern the architectural design of modern movie recommender systems:
 
-## 2.9 Gaps and the contribution of this project
+```
+                          ┌─────────────────────────────────────────┐
+                          │   Systemic Recommender Bottlenecks      │
+                          └────────────────────┬────────────────────┘
+                                               │
+         ┌──────────────────┬──────────────────┼──────────────────┬──────────────────┐
+         ▼                  ▼                  ▼                  ▼                  ▼
+  Data Sparsity      Predictive Accuracy   Cold Start        Scalability       Running Time
+     (46%)               (22%)              (13%)               (10%)              (9%)
+ ───┬─────────────── ───┬─────────────── ───┬─────────────── ───┬─────────────── ───┬───────────────
+  • Visual PMF       • Deep CNN/1D-CNN   • Early Metadata    • Virtual Users     • Pre-computed
+    Aesthetics [5]     Classifiers [6]     (CBF) [6, 13]       (KM-Slope) [7]      Matrices [10]
+  • Dimensionality   • Sentiment SVM     • Demographic       • Offline Matrix    • Fast Vector Space
+    Reduction [10]     Fusion [8]          Clustering [7]      Factorization [2]   Matching [11]
+```
 
-| Gap observed | CineMatch response |
-|---|---|
-| Strong personalisation exists only inside closed commercial services | Open, platform-independent web platform with transparent logic |
-| Research code (MovieLens experiments) rarely ships as a usable product with explanations | End-to-end platform: data → model → API → UI |
-| Many papers compare complex models without tuned simple baselines [Dacrema2019] | Systematic comparison of baselines, CF, MF and hybrid under one protocol |
-| Cold start is often handled ad hoc | Explicit onboarding + switching hybrid, evaluated separately for new vs. active users |
-| Accuracy-only evaluation | Accuracy + coverage/novelty/diversity + user study |
+1.  **Data Sparsity (46% of Literature Focus [1])**: Commercial rating matrices frequently exceed 95–99% missing values. Traditional memory-based CF [9, 10] degrades severe under sparsity. Modern systems resolve this via **visual/aesthetic latent factorization (UVMF-AES)** [5], **TF-IDF + SVD matrix compression** [10], or **demographic virtual user consolidation** [7].
+2.  **Predictive Accuracy & Quality (22%)**: Recommender precision has transitioned from basic rating prediction (MAE/RMSE) to classification accuracy and multi-metric satisfaction [4]. Integrating **1D-CNN classifiers** achieves 96.8% hit prediction [6], while **sentiment analysis via SVM** achieves 98.63% accuracy in filtering negatively reviewed titles [8].
+3.  **Cold Start Problem (13%)**: Occurs when new users or unrated items enter the platform. **Content-based NLP** [13], **early pre-production metadata analysis** [6], and **demographic profile assignment** [7] allow systems to generate high-quality recommendations without requiring prior user interaction history.
+4.  **Scalability (10%) & Running Time (9%)**: As user bases ($M$) and movie catalogs ($N$) expand, $O(M \cdot N)$ memory-based CF becomes computationally unfeasible [10]. Models like **Weighted KM-Slope-VU** [7] compress matrices into virtual opinion leaders, dropping time complexity to $O(m + n^2)$ for sub-second real-time web deployment (*MovieWatch*).
 
-## 2.10 Summary of design decisions informed by the literature
+---
 
-1. Frame the task as **top-N ranking**; report NDCG@10, Recall@10 as primary metrics [Cremonesi2010].
-2. Use **item-based CF and ALS/BPR MF** as main CF components [Sarwar2001], [Hu2008], [Rendle2009]; compare with tuned baselines before any neural model [Rendle2020], [Dacrema2019].
-3. Use a **weighted hybrid with cold-start switching** [Burke2002], [Schein2002].
-4. Provide **explanations and negative feedback** [Tintarev2007].
-5. Evaluate beyond accuracy and with users [Ge2010], [Pu2011], [Brooke1996].
-6. Treat **privacy** as a requirement from the start [Narayanan2008].
+## References
 
-## 2.11 References
-
-* **[Bennett2007]** Bennett, J., Lanning, S. (2007). The Netflix Prize. *Proceedings of KDD Cup and Workshop 2007*.
-* **[Brooke1996]** Brooke, J. (1996). SUS: a "quick and dirty" usability scale. In *Usability Evaluation in Industry*, Taylor & Francis.
-* **[Burke2002]** Burke, R. (2002). Hybrid recommender systems: survey and experiments. *User Modeling and User-Adapted Interaction*, 12(4), 331–370.
-* **[Chen2023]** Chen, J., Dong, H., Wang, X., Feng, F., Wang, M., He, X. (2023). Bias and debias in recommender system: a survey and future directions. *ACM Transactions on Information Systems*, 41(3).
-* **[Covington2016]** Covington, P., Adams, J., Sargin, E. (2016). Deep neural networks for YouTube recommendations. *RecSys '16*.
-* **[Cremonesi2010]** Cremonesi, P., Koren, Y., Turrin, R. (2010). Performance of recommender algorithms on top-N recommendation tasks. *RecSys '10*.
-* **[Dacrema2019]** Ferrari Dacrema, M., Cremonesi, P., Jannach, D. (2019). Are we really making much progress? A worrying analysis of recent neural recommendation approaches. *RecSys '19*.
-* **[Ge2010]** Ge, M., Delgado-Battenfeld, C., Jannach, D. (2010). Beyond accuracy: evaluating recommender systems by coverage and serendipity. *RecSys '10*.
-* **[GomezUribe2015]** Gomez-Uribe, C. A., Hunt, N. (2015). The Netflix recommender system: algorithms, business value, and innovation. *ACM Transactions on Management Information Systems*, 6(4).
-* **[Harper2015]** Harper, F. M., Konstan, J. A. (2015). The MovieLens datasets: history and context. *ACM Transactions on Interactive Intelligent Systems*, 5(4).
-* **[He2017]** He, X., Liao, L., Zhang, H., Nie, L., Hu, X., Chua, T.-S. (2017). Neural collaborative filtering. *WWW '17*.
-* **[Herlocker2004]** Herlocker, J. L., Konstan, J. A., Terveen, L. G., Riedl, J. T. (2004). Evaluating collaborative filtering recommender systems. *ACM Transactions on Information Systems*, 22(1), 5–53.
-* **[Hidasi2016]** Hidasi, B., Karatzoglou, A., Baltrunas, L., Tikk, D. (2016). Session-based recommendations with recurrent neural networks. *ICLR 2016*.
-* **[Hu2008]** Hu, Y., Koren, Y., Volinsky, C. (2008). Collaborative filtering for implicit feedback datasets. *ICDM 2008*.
-* **[Jannach2016]** Jannach, D., Adomavicius, G. (2016). Recommendations with a purpose. *RecSys '16*.
-* **[Jarvelin2002]** Järvelin, K., Kekäläinen, J. (2002). Cumulated gain-based evaluation of IR techniques. *ACM Transactions on Information Systems*, 20(4), 422–446.
-* **[Kang2018]** Kang, W.-C., McAuley, J. (2018). Self-attentive sequential recommendation. *ICDM 2018*.
-* **[Koren2009]** Koren, Y., Bell, R., Volinsky, C. (2009). Matrix factorization techniques for recommender systems. *IEEE Computer*, 42(8), 30–37.
-* **[Linden2003]** Linden, G., Smith, B., York, J. (2003). Amazon.com recommendations: item-to-item collaborative filtering. *IEEE Internet Computing*, 7(1), 76–80.
-* **[Lops2011]** Lops, P., de Gemmis, M., Semeraro, G. (2011). Content-based recommender systems: state of the art and trends. In *Recommender Systems Handbook*, Springer.
-* **[Narayanan2008]** Narayanan, A., Shmatikov, V. (2008). Robust de-anonymization of large sparse datasets. *IEEE Symposium on Security and Privacy*.
-* **[Pazzani2007]** Pazzani, M. J., Billsus, D. (2007). Content-based recommendation systems. In *The Adaptive Web*, Springer.
-* **[Pu2011]** Pu, P., Chen, L., Hu, R. (2011). A user-centric evaluation framework for recommender systems. *RecSys '11*.
-* **[Rendle2009]** Rendle, S., Freudenthaler, C., Gantner, Z., Schmidt-Thieme, L. (2009). BPR: Bayesian personalized ranking from implicit feedback. *UAI 2009*.
-* **[Rendle2020]** Rendle, S., Krichene, W., Zhang, L., Anderson, J. (2020). Neural collaborative filtering vs. matrix factorization revisited. *RecSys '20*.
-* **[Resnick1994]** Resnick, P., Iacovou, N., Suchak, M., Bergstrom, P., Riedl, J. (1994). GroupLens: an open architecture for collaborative filtering of netnews. *CSCW '94*.
-* **[Ricci2022]** Ricci, F., Rokach, L., Shapira, B. (eds.) (2022). *Recommender Systems Handbook*, 3rd ed., Springer.
-* **[Sarwar2001]** Sarwar, B., Karypis, G., Konstan, J., Riedl, J. (2001). Item-based collaborative filtering recommendation algorithms. *WWW '01*.
-* **[Schein2002]** Schein, A. I., Popescul, A., Ungar, L. H., Pennock, D. M. (2002). Methods and metrics for cold-start recommendations. *SIGIR '02*.
-* **[Tintarev2007]** Tintarev, N., Masthoff, J. (2007). A survey of explanations in recommender systems. *ICDE Workshops 2007*.
-* **[Ziegler2005]** Ziegler, C.-N., McNee, S. M., Konstan, J. A., Lausen, G. (2005). Improving recommendation lists through topic diversification. *WWW '05*.
+1. T. Widiyaningtyas and Y. Ariyanto, “A Systematic Review of Movie Recommender Systems,” ITEGAM- Journal of Engineering and Technology for Industrial Applications (ITEGAM-JETIA), vol. 10, no. 47, 2024, doi: 10.5935/jetia.v10i47.1052.
+2. S. Jayalakshmi, N. Ganesh, R. Čep, and J. Senthil Murugan, “Movie Recommender Systems: Concepts, Methods, Challenges, and Future Directions,” Sensors, vol. 22, no. 13, p. 4904, June 2022, doi: 10.3390/s22134904.
+3. R. Lavanya, U. Singh, and V. Tyagi, "A Comprehensive Survey on Movie Recommendation Systems," in *Proceedings of the IEEE International Conference on Artificial Intelligence and Smart Systems (ICAIS)*, Coimbatore, India, 2021, pp. 532–536. DOI: 10.1109/ICAIS50930.2021.9395759.
+4. M. Goyani and N. Chaurasiya, "A Review of Movie Recommendation System: Limitations, Survey and Challenges," *Electronic Letters on Computer Vision and Image Analysis (ELCVIA)*, vol. 19, no. 3, pp. 18–37, Aug. 2020. DOI: 10.5565/rev/elcvia.1232.
+5. X. Chen, P. Zhao, Y. Liu, L. Zhao, J. Fang, V. S. Sheng, and Z. Cui, "Exploiting Aesthetic Features in Visual Contents for Movie Recommendation," *IEEE Access*, vol. 7, pp. 43802–43812, Apr. 2019. DOI: 10.1109/ACCESS.2019.2910722.
+6. S. Sahu, R. Kumar, M. S. Pathan, J. Shafi, Y. Kumar, and M. F. Ijaz, "Movie Popularity and Target Audience Prediction Using the Content-Based Recommender System," *IEEE Access*, vol. 10, pp. 43900–43915, Apr. 2022. DOI: 10.1109/ACCESS.2022.3168161.
+7. J. Zhang, Y. Wang, Z. Yuan, and Q. Jin, "Personalized Real-Time Movie Recommendation System: Practical Prototype and Evaluation," *Tsinghua Science and Technology*, vol. 25, no. 2, pp. 180–191, Apr. 2020. DOI: 10.26599/TST.2018.9010118.
+8. N. Pavitha, V. Pungliya, A. Raut, R. Bhonsle, A. Purohit, A. Patel, and R. Shashidhar, "Movie recommendation and sentiment analysis using machine learning," *Global Transitions Proceedings*, vol. 3, no. 1, pp. 279–284, Jun. 2022. DOI: 10.1016/j.gltp.2022.03.012.
+9. G. Arora et al., "Movie Recommendation System Based on User Similarity and Hybrid Filtering," *International Journal of Computer Science and Mobile Computing (IJCSMC)*, vol. 3, no. 4, pp. 765–770, Apr. 2014. https://ijcsmc.com/docs/papers/April2014/V3I4201494.pdf 
+10. H. Bhowmick, A. Chatterjee, and J. Sen, “Comprehensive Movie Recommendation System,” arXiv.org, Dec. 23, 2021. https://arxiv.org/abs/2112.12463?context=cs.IR (accessed Oct. 20, 2026).
+11. R. H. Singh, S. Maurya, T. Tripathi, T. Narula, and G. Srivastav, "Movie Recommendation System using Cosine Similarity and KNN," *International Journal of Engineering and Advanced Technology (IJEAT)*, vol. 9, no. 5, pp. 2–3, May 2020. DOI: 10.35940/ijeat.E9666.069520
+12. N. Kapoor, S. Vishal, and K. S. Krishnaveni, "Movie Recommendation System Using NLP Tools," in *Proceedings of the IEEE International Conference on Computing, Communication and Security*, 2020, pp. 1–5. doi: 10.1109/ICCES48766.2020.9137993.

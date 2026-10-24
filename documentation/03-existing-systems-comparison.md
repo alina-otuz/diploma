@@ -1,7 +1,6 @@
 # 3. Existing System Comparison
 
-> **Method and caveat.** This is a qualitative, feature-level comparison of publicly visible behaviour, based on general knowledge of the products. Products change often: **before submission, re-check each system yourself (create a test account, take dated screenshots) and fix any cell that is out of date.** Put screenshots in `docs/evidence/` and reference them here.
-
+> **Method and caveat.** This is a qualitative, feature-level comparison of publicly visible behaviour, based on general knowledge of the products.
 Legend: ● strong / yes · ◐ partial / limited · ○ weak / no · ? verify
 
 ## 3.1 Systems reviewed
@@ -33,11 +32,10 @@ Legend: ● strong / yes · ◐ partial / limited · ○ weak / no · ? verify
 | Beyond-accuracy control (diversity/novelty) | ◐ | ○ | ○ | ◐ | ○ | ○ | ◐ (diversity re-ranking) |
 | Multi-algorithm evaluation published | ◐ | ○ | ○ | ● | ○ | ○ | ● (thesis) |
 
-*(Cells marked ? could not be asserted from general knowledge — verify.)*
 
 ### 3.2b Discovery features requested in the user interviews
 
-Based on [doc 1a](01a-user-research.md). Same legend and the same caveat: verify in the live products.
+Based on [doc 1a](01a-user-research.md).
 
 | Feature | Netflix | IMDb | Letterboxd | MovieLens | JustWatch | Kinopoisk | **CineMatch (target)** |
 |---|---|---|---|---|---|---|---|
@@ -53,7 +51,7 @@ Based on [doc 1a](01a-user-research.md). Same legend and the same caveat: verify
 
 ### 3.2c "Current practice" reported by interviewees
 
-Interviewees named unofficial streaming aggregator sites (e.g. HDRezka, KinoGo) as where they watch. They are mentioned only as the user-reported baseline: users cited ad banners, outdated UI, no central watchlist and weak recommendations. They are **not** a design benchmark or a legal model, and should not be linked in the thesis.
+Interviewees named unofficial streaming aggregator sites (e.g. HDRezka, KinoGo) as where they watch. They are mentioned only as the user-reported baseline: users cited ad banners, outdated UI, no central watchlist and weak recommendations. They are **not** a design benchmark or a legal model.
 
 ## 3.3 Observations
 

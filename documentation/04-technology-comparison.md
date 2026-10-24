@@ -1,7 +1,5 @@
 # 4. Technology Comparison
 
-> **How to read the scores.** Criteria weights and 1–5 scores below are the author's *judgement for this project* (solo developer, ML-heavy, 16 weeks), not objective truths. **Adjust the weights and the "familiarity" scores to match your real skills** — the weighted totals are recomputed by the formula `Σ weight × score` shown in each table. Re-check library maintenance status and versions at implementation time.
-
 ## 4.1 Backend framework
 
 Weights: ML integration 30 %, development speed (solo) 25 %, performance/async 15 %, ecosystem & docs 15 %, learning curve 15 %.
